@@ -6,10 +6,14 @@ import json
 
 
 class MasterAgent:
-    def __init__(self):
+    def __init__(self, schema_text=None):
+        """
+        Initializes the Master Agent with optional schema context.
+        """
+        self.schema_text = schema_text  # Schema text from the .docx file
         self.task_agent = TaskClassificationAgent()
         self.execution_agents = {
-            "convert_datetime": DataTransformationAgent(),
+            "convert_datetime": DataTransformationAgent(schema_text),  # Pass schema to DataTransformationAgent
             "join_tables": TableJoinAgent(),
             "check_distribution": DataValidationAgent()
         }
@@ -26,7 +30,7 @@ class MasterAgent:
 
             if sub_agent:
                 print(f"Executing Task: {action}")
-                return sub_agent.execute(user_query,df_dict)
+                return sub_agent.execute(user_query, df_dict)
             else:
                 print(f"No agent found for task: {action}")
         else:
