@@ -7,14 +7,14 @@ from openai import OpenAI
 
 
 class TimezoneExtractor:
-    def __init__(self):
+    def __init__(self, api_key):
         """
         Initializes the TimezoneExtractor with the DeepSeek model.
         """
         self.model = "deepseek-chat"  # Use the correct model name
+        self.client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com")
 
     def extract_timezones(self, user_query):
-        client = OpenAI(api_key="sk-74c415edef3f4a16b1ef8deb3839cf2a", base_url="https://api.deepseek.com")
         """
         Extracts the original and target timezones the user asks for from the user query.
         Returns the timezones in pytz format as [transformed_original, transformed_target].
@@ -42,7 +42,7 @@ class TimezoneExtractor:
 
         try:
             # Query the DeepSeek API
-            response = client.chat.completions.create(
+            response = self.client.chat.completions.create(
                 model=self.model,
                 messages=[
                     {"role": "system", "content": "You are a helpful assistant."},
@@ -54,6 +54,7 @@ class TimezoneExtractor:
 
             # Extract the raw output from the API response
             raw_output = response.choices[0].message.content.strip()
+
             # Split the output into original and target timezones
             timezones = raw_output.split(", ")
             if len(timezones) != 2:
@@ -68,8 +69,8 @@ class TimezoneExtractor:
         except Exception as e:
             print(f"Error extracting timezones: {e}")
             return [None, None]  # Return None for both timezones if extraction fails
-    
-    
+
+
 class DataTransformationAgent:
     def __init__(self, schema_text=None, model="llama3"):
         """
@@ -84,15 +85,9 @@ class DataTransformationAgent:
         Cleans the response from Ollama to extract relevant information.
         Removes any extra text or unwanted artifacts.
         """
-        # # Remove unwanted artifacts (e.g., <think> tags, explanations)
-        # response_text = response_text.strip()
-        # response_text = re.sub(r"<think>.*?</think>", "", response_text, flags=re.DOTALL)
-        # response_text = re.sub(r"Explanation:.*", "", response_text, flags=re.DOTALL)
-
         # Extract only the final comma-separated list
         extracted_items = [item.strip() for item in response_text.split(",") if item.strip()]
         return extracted_items
-
 
     def extract_table_and_columns(self, user_query, df_dict):
         """
@@ -138,8 +133,6 @@ class DataTransformationAgent:
             )
             raw_output = response["message"]["content"].strip()
 
-            # print("column output:", raw_output)
-            
             # Clean the response
             selected_columns = self.clean_response(raw_output)
 
@@ -156,7 +149,7 @@ class DataTransformationAgent:
             print(f"Error in column extraction: {e}")
             return table_name, None
 
-    def execute(self, user_query, df_dict):
+    def execute(self, user_query, df_dict, api_key):
         """
         Converts datetime columns based on inferred timezones and provides a clean output.
         """
@@ -170,10 +163,8 @@ class DataTransformationAgent:
         df = df_dict[table_name]
 
         # Extract original and target timezones from the user query
-        timezone_extractor=TimezoneExtractor()
+        timezone_extractor = TimezoneExtractor(api_key)
         original_timezone, target_timezone = timezone_extractor.extract_timezones(user_query)
-        
-        #Re
 
         output = {
             "columns_converted": [],
@@ -181,13 +172,13 @@ class DataTransformationAgent:
             "new_timezone": target_timezone
         }
 
-        # for col in datetime_columns:
-        #     try:
-        #         df[col] = pd.to_datetime(df[col]).dt.tz_localize(original_timezone).dt.tz_convert(target_timezone)
-        #         output["columns_converted"].append(col)
-        #         print(f"Converted {col} from {original_timezone} to {target_timezone} in {table_name}")
-        #     except Exception as e:
-        #         print(f"Error converting {col}: {e}")
+        for col in datetime_columns:
+            try:
+                df[col] = pd.to_datetime(df[col]).dt.tz_localize(original_timezone).dt.tz_convert(target_timezone)
+                output["columns_converted"].append(col)
+                print(f"Converted {col} from {original_timezone} to {target_timezone} in {table_name}")
+            except Exception as e:
+                print(f"Error converting {col}: {e}")
 
         print("\n### Conversion Summary ###")
         print(f"0. Executed Table: {table_name}")

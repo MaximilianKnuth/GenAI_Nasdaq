@@ -18,7 +18,7 @@ class MasterAgent:
             "check_distribution": DataValidationAgent()
         }
 
-    def process_query(self, user_query, df_dict):
+    def process_query(self, user_query, df_dict,api_key):
         """
         Processes user query, classifies the task, and delegates execution.
         Returns a structured pipeline log.
@@ -30,7 +30,7 @@ class MasterAgent:
 
             if sub_agent:
                 print(f"Executing Task: {action}")
-                return sub_agent.execute(user_query, df_dict)
+                return sub_agent.execute(user_query, df_dict,api_key)
             else:
                 print(f"No agent found for task: {action}")
         else:

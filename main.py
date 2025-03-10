@@ -12,6 +12,9 @@ if __name__ == "__main__":
         "Schema": "01_Data/Data Product Samples.docx"  # Path to the .docx file
     }
 
+    # Prompt the user to input the DeepSeek API key
+    api_key = input("Please enter your DeepSeek API key: ").strip()
+
     # Load CSV files into DataFrames
     df_dict = {name: pd.read_csv(path) for name, path in file_paths.items() if name != "Schema"}
 
@@ -32,4 +35,4 @@ if __name__ == "__main__":
 
     for query in queries: 
         print(f"\nUser Query: {query}")
-        result = master_agent.process_query(query, df_dict)
+        result = master_agent.process_query(query, df_dict,api_key)
