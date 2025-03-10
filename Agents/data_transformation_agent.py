@@ -2,7 +2,74 @@ import pandas as pd
 import ollama
 import re
 import pytz
+from transformers import pipeline
+from openai import OpenAI
 
+
+class TimezoneExtractor:
+    def __init__(self):
+        """
+        Initializes the TimezoneExtractor with the DeepSeek model.
+        """
+        self.model = "deepseek-chat"  # Use the correct model name
+
+    def extract_timezones(self, user_query):
+        client = OpenAI(api_key="sk-74c415edef3f4a16b1ef8deb3839cf2a", base_url="https://api.deepseek.com")
+        """
+        Extracts the original and target timezones the user asks for from the user query.
+        Returns the timezones in pytz format as [transformed_original, transformed_target].
+        If either timezone is not found, returns None for that timezone.
+        """
+        all_timezones = pytz.all_timezones
+
+        # Define the prompt for extracting both timezones
+        prompt = f"""
+        You are an AI assistant to find the corresponding timezones in **{user_query}** to their correspondence in **"{all_timezones}"**.
+
+        ### TASK:
+        1. Extract the **original timezone** (the timezone the data is currently in).
+        2. Extract the **target timezone** (the timezone the user wants to convert to).
+        3. If either timezone is not explicitly mentioned, return `None` for that timezone.
+
+        ### IMPORTANT RULES:
+        - Output ONLY the corresponding timezones in the format `Region/City` (e.g., `US/Eastern` or `UTC`), nothing more.
+        - If a timezone is not found, return `None` for that timezone.
+        - Do not include any additional text or explanations.
+
+        ### OUTPUT FORMAT:
+        Example: `US/Eastern, UTC`
+        """
+
+        try:
+            # Query the DeepSeek API
+            response = client.chat.completions.create(
+                model=self.model,
+                messages=[
+                    {"role": "system", "content": "You are a helpful assistant."},
+                    {"role": "user", "content": prompt},
+                ],
+                stream=False,
+                temperature=0  # Set temperature to 0 for deterministic output
+            )
+
+            # Extract the raw output from the API response
+            raw_output = response.choices[0].message.content.strip()
+            # Split the output into original and target timezones
+            timezones = raw_output.split(", ")
+            if len(timezones) != 2:
+                raise ValueError("Invalid number of timezones returned.")
+
+            # Extract and validate timezones
+            original_timezone = pytz.timezone(timezones[0]) if timezones[0].lower() != "none" else None
+            target_timezone = pytz.timezone(timezones[1]) if timezones[1].lower() != "none" else None
+
+            return [original_timezone, target_timezone]
+
+        except Exception as e:
+            print(f"Error extracting timezones: {e}")
+            return [None, None]  # Return None for both timezones if extraction fails
+    
+    
 class DataTransformationAgent:
     def __init__(self, schema_text=None, model="llama3"):
         """
@@ -26,70 +93,6 @@ class DataTransformationAgent:
         extracted_items = [item.strip() for item in response_text.split(",") if item.strip()]
         return extracted_items
 
-    def extract_timezones_names(text):
-        """
-        Extracts timezones in the format `XXX,XXX` from a large text.
-        """
-        # Regex pattern to match two valid timezone strings separated by a comma
-        timezone_pattern = r"\b([A-Za-z_]+/[A-Za-z_]+),\s*([A-Za-z_]+/[A-Za-z_]+)\b"
-
-        # Search for the pattern in the text
-        match = re.search(timezone_pattern, text)
-
-        if match:
-            # Extract the two timezones
-            timezone1, timezone2 = match.groups()
-            return timezone1, timezone2
-        else:
-            return None, None
-    
-    def extract_timezones(self, user_query):
-        all_timezones = pytz.all_timezones
-        
-        """
-        Extracts the original and target timezones from the user query using Ollama 3.
-        """
-        prompt = f"""
-
-        ### TASK:
-        1. The user provided this input: **"{user_query}"**  
-        2. Identify what is the original timezone and the new target timezone from the user query.
-        3. Transform the identified original timezone and the target timezone to its correspondance timezone in **"{all_timezones}"**
-        4. Return ONLY the two transformed timezones as a comma-separated list as (transformed original timezone, transformed target timezone).
-
-        ### IMPORTANT RULES:
-        1. If the original timezone is not explicitly mentioned, assume it is **UTC**.
-        2. If the target timezone is not explicitly mentioned, assume it is **UTC**.
-        3. Do not include anything else not even reasoning in the output, just two timezones.
-        
-        ### OUTPUT FORMAT:
-        Example: `US/Eastern, UTC`
-        """
-
-        try:
-            # Query Ollama 3
-            response = ollama.chat(
-                model=self.model,
-                messages=[{"role": "user", "content": prompt}],
-                options={"temperature": 0}
-            )
-            raw_output = response["message"]["content"].strip()
-
-            
-            print("timezone output:", raw_output)
-            
-            # Clean the response
-            timezones = self.clean_response(self.extract_timezones_names(raw_output))
-
-            # Extract original and target timezones
-            original_timezone = timezones[0] if len(timezones) > 0 else "UTC"
-            target_timezone = timezones[1] if len(timezones) > 1 else "UTC"
-
-            return original_timezone, target_timezone
-
-        except Exception as e:
-            print(f"Error extracting timezones: {e}")
-            return "UTC", "UTC"  # Default to UTC if extraction fails
 
     def extract_table_and_columns(self, user_query, df_dict):
         """
@@ -167,7 +170,10 @@ class DataTransformationAgent:
         df = df_dict[table_name]
 
         # Extract original and target timezones from the user query
-        original_timezone, target_timezone = self.extract_timezones(user_query)
+        timezone_extractor=TimezoneExtractor()
+        original_timezone, target_timezone = timezone_extractor.extract_timezones(user_query)
+        
+        #Re
 
         output = {
             "columns_converted": [],
@@ -175,13 +181,13 @@ class DataTransformationAgent:
             "new_timezone": target_timezone
         }
 
-        for col in datetime_columns:
-            try:
-                df[col] = pd.to_datetime(df[col]).dt.tz_localize(original_timezone).dt.tz_convert(target_timezone)
-                output["columns_converted"].append(col)
-                print(f"Converted {col} from {original_timezone} to {target_timezone} in {table_name}")
-            except Exception as e:
-                print(f"Error converting {col}: {e}")
+        # for col in datetime_columns:
+        #     try:
+        #         df[col] = pd.to_datetime(df[col]).dt.tz_localize(original_timezone).dt.tz_convert(target_timezone)
+        #         output["columns_converted"].append(col)
+        #         print(f"Converted {col} from {original_timezone} to {target_timezone} in {table_name}")
+        #     except Exception as e:
+        #         print(f"Error converting {col}: {e}")
 
         print("\n### Conversion Summary ###")
         print(f"0. Executed Table: {table_name}")
@@ -189,4 +195,4 @@ class DataTransformationAgent:
         print(f"2. Original timezone: {output['original_timezone']}")
         print(f"3. New timezone: {output['new_timezone']}")
 
-        return df
+        return output
