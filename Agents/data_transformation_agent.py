@@ -160,7 +160,7 @@ class DataTransformationAgent:
             print("Missing required information. Task cannot be completed.")
             return None
 
-        df = df_dict[table_name]
+        # df = df_dict[table_name]
 
         # Extract original and target timezones from the user query
         timezone_extractor = TimezoneExtractor(api_key)
@@ -172,13 +172,13 @@ class DataTransformationAgent:
             "new_timezone": target_timezone
         }
 
-        for col in datetime_columns:
-            try:
-                df[col] = pd.to_datetime(df[col]).dt.tz_localize(original_timezone).dt.tz_convert(target_timezone)
-                output["columns_converted"].append(col)
-                print(f"Converted {col} from {original_timezone} to {target_timezone} in {table_name}")
-            except Exception as e:
-                print(f"Error converting {col}: {e}")
+        # for col in datetime_columns:
+        #     try:
+        #         df[col] = pd.to_datetime(df[col]).dt.tz_localize(original_timezone).dt.tz_convert(target_timezone)
+        #         output["columns_converted"].append(col)
+        #         print(f"Converted {col} from {original_timezone} to {target_timezone} in {table_name}")
+        #     except Exception as e:
+        #         print(f"Error converting {col}: {e}")
 
         print("\n### Conversion Summary ###")
         print(f"0. Executed Table: {table_name}")

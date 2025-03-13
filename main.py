@@ -27,7 +27,7 @@ if __name__ == "__main__":
 
     # Example Queries
     queries = [
-        "Please convert transaction timestamps in the EQR dataset from EST to UTC.",
+        # "Please convert transaction timestamps in the EQR dataset from EST to UTC.",
         # "Please convert transaction timestamps in the EQR dataset from EST.",
         # "Join EFR and EQR based on ticker",
         # "Check the distribution of eqr and sgr"

@@ -3,7 +3,7 @@ from scipy.stats import shapiro
 
 class DataValidationAgent:
     def execute(self, action, df_dict):
-        """Checks skewness and normality of specified integer columns."""
+        """Checks skewness and normality of specified integer columns of A and B tables."""
         df_name = action.get("tables", ["EFR"])[0]
         if df_name not in df_dict:
             print(f"Table {df_name} not found.")
