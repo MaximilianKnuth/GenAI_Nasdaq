@@ -1,5 +1,4 @@
 import pandas as pd
-import ollama
 import re
 import pytz
 from transformers import pipeline
@@ -76,11 +75,11 @@ class TimezoneExtractor:
 
 
 class DataTransformationAgent:
-    def __init__(self, model="llama3"):
+    def __init__(self, model=None):
         """
         Uses the `llama3` model via Ollama.
         """
-        self.model = model
+        # self.model = model
 
     def extract_table_and_columns(self, user_query, df_dict):
         
