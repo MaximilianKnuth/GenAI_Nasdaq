@@ -6,14 +6,13 @@ import json
 
 
 class MasterAgent:
-    def __init__(self, schema_text=None):
+    def __init__(self):
         """
         Initializes the Master Agent with optional schema context.
         """
-        self.schema_text = schema_text  # Schema text from the .docx file
         self.task_agent = TaskClassificationAgent()
         self.execution_agents = {
-            "convert_datetime": DataTransformationAgent(schema_text),  # Pass schema to DataTransformationAgent
+            "convert_datetime": DataTransformationAgent(),  
             "join_tables": TableJoinAgent(),
             "check_distribution": DataValidationAgent()
         }

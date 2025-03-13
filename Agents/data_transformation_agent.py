@@ -4,7 +4,7 @@ import re
 import pytz
 from transformers import pipeline
 from openai import OpenAI
-
+from Agents.chunk_table import trunk_table_execute
 
 class TimezoneExtractor:
     def __init__(self, api_key):
@@ -64,6 +64,10 @@ class TimezoneExtractor:
             original_timezone = pytz.timezone(timezones[0]) if timezones[0].lower() != "none" else None
             target_timezone = pytz.timezone(timezones[1]) if timezones[1].lower() != "none" else None
 
+            if original_timezone==None:
+                original_timezone = input("Please enter the original timezone when the table is built in pytz library format (if it's local, then enter 'UTC'): ").strip()
+            if target_timezone==None:
+                target_timezone = input("Please enter the target timezone you want to convert to in pytz library format (if it's local, then enter 'UTC'): ").strip()
             return [original_timezone, target_timezone]
 
         except Exception as e:
@@ -72,27 +76,15 @@ class TimezoneExtractor:
 
 
 class DataTransformationAgent:
-    def __init__(self, schema_text=None, model="llama3"):
+    def __init__(self, model="llama3"):
         """
-        Initializes the Data Transformation Agent with schema context.
         Uses the `llama3` model via Ollama.
         """
-        self.schema_text = schema_text
         self.model = model
 
-    def clean_response(self, response_text):
-        """
-        Cleans the response from Ollama to extract relevant information.
-        Removes any extra text or unwanted artifacts.
-        """
-        # Extract only the final comma-separated list
-        extracted_items = [item.strip() for item in response_text.split(",") if item.strip()]
-        return extracted_items
-
     def extract_table_and_columns(self, user_query, df_dict):
-        """
-        Uses Ollama 3 to determine the relevant table and column(s) from the user query.
-        """
+        
+        # extract table name from query
         possible_tables = df_dict.keys()
         table_name = next((table for table in possible_tables if table.lower() in user_query.lower()), None)
 
@@ -100,53 +92,14 @@ class DataTransformationAgent:
             print("No valid table found in query.")
             return None, None
 
-        # Fetch available columns from the identified table
-        df = df_dict[table_name]
-        available_columns = ", ".join(df.columns)
-
-        # Define LLM Prompt
-        prompt = f"""
-        You are an AI assistant that extracts column names related to datetime from a dataset.
-
-        ### TASK:
-        A user wants to convert datetime columns to UTC.  
-        The user provided this input: **"{user_query}"**  
-        The table `{table_name}` contains the following columns: **{available_columns}**.
-
-        ### IMPORTANT RULES:
-        If the user explicitly mentions a column name, **prioritize that column** (if it exists in the table).  
-        If the user **does not specify** a column, **identify relevant datetime-related columns automatically**.  
-        **ONLY return valid column names related to date, time, or timestamps**.  
-        **IGNORE text, IDs, tickers, financial values, and irrelevant fields**.  
-        **Return ONLY the identified table column names as a comma-separated list, nothing else.**
-
-        ### OUTPUT FORMAT, do not include anything else including reasoning:
-        Example: `date, timestamp, latestquarter`
-        """
-
+        # extract date column from table
         try:
-            # Query Ollama 3
-            response = ollama.chat(
-                model=self.model,
-                messages=[{"role": "user", "content": prompt}],
-                options={"temperature": 0}
-            )
-            raw_output = response["message"]["content"].strip()
-
-            # Clean the response
-            selected_columns = self.clean_response(raw_output)
-
-            # Ensure only valid columns are returned
-            selected_columns = [col for col in selected_columns if col in df.columns]
-
-            if not selected_columns:
-                print(f"No datetime columns identified in {table_name}.")
-                return table_name, None
-
-            return table_name, selected_columns
+            summary, table_data = trunk_table_execute(table_name)
+            date_columns=table_data['Date']
+            return table_name, date_columns
 
         except Exception as e:
-            print(f"Error in column extraction: {e}")
+            print(f"No Column in table {table_name} is declared as Date type: {e}")
             return table_name, None
 
     def execute(self, user_query, df_dict, api_key):
