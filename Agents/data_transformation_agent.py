@@ -75,11 +75,16 @@ class TimezoneExtractor:
 
 
 class DataTransformationAgent:
-    def __init__(self, model=None):
+    def __init__(self, model=None, data_validator=None):
         """
         Uses the `llama3` model via Ollama.
         """
-        # self.model = model
+        self.model = model
+        self.data_validator = data_validator
+    
+    def set_data_validator(self,data_validator):
+        self.data_validator = data_validator
+        
 
     def extract_table_and_columns(self, user_query, df_dict):
         

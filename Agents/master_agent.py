@@ -1,7 +1,7 @@
 from Agents.data_transformation_agent import DataTransformationAgent
 from Agents.task_classification_agent import TaskClassificationAgent
 from Agents.table_join_agent import TableJoinAgent
-from Agents.data_validation_agent import DataValidationAgent
+from Agents.data_validation_agent import DataValidator
 import json
 
 
@@ -13,9 +13,9 @@ class MasterAgent:
         self.task_agent = TaskClassificationAgent()
         self.execution_agents = {
             "convert_datetime": DataTransformationAgent(),  
-            "join_tables": TableJoinAgent(),
-            "check_distribution": DataValidationAgent()
+            "join_tables": TableJoinAgent()
         }
+        self.validation_agent = DataValidator()
 
     def process_query(self, user_query, df_dict,api_key):
         """
