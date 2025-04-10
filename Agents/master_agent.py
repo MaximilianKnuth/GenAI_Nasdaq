@@ -11,4 +11,4 @@ class MasterAgent:
 
     def process_query(self, user_query, df_dict,api_key):
         self.execution_agent = ExecutionAgent(user_query, df_dict,api_key)
-        self.execution_agent.execute_query()
+        self.execution_agent.execute_task()

@@ -124,6 +124,8 @@ class DataTransformationAgent:
         timezone_extractor = TimezoneExtractor(api_key)
         original_timezone, target_timezone = timezone_extractor.extract_timezones(user_query)
 
+        validation_summary = self.data_validator.validate_dataframe(df_dict[table_name])
+        
         output = {
             "columns_converted": [],
             "original_timezone": original_timezone,
@@ -137,6 +139,12 @@ class DataTransformationAgent:
         #         print(f"Converted {col} from {original_timezone} to {target_timezone} in {table_name}")
         #     except Exception as e:
         #         print(f"Error converting {col}: {e}")
+        
+        print("\n### Data Validation Summary ###")
+        print(f"0. Quality check passed: {validation_summary['valid']}")
+        print(f"1. Errors: {validation_summary['errors']}")
+        print(f"2. Warnings: {validation_summary['warnings']}")
+        print(f"3. Quality metrics: {validation_summary['quality_metrics']}")
 
         print("\n### Conversion Summary ###")
         print(f"0. Executed Table: {table_name}")

@@ -13,13 +13,14 @@ class ExecutionAgent:
         self.df_dict = df_dict
         self.api_key = api_key
         self.data_validator = DataValidator()
+        self.task_classifier = TaskClassificationAgent()
         self.execution_agents = {
             "convert_datetime": DataTransformationAgent(data_validator=self.data_validator),  
             #"join_tables": TableJoinAgent()
         }
     
     def classify_task(self):
-        action = self.task_agent.classify(self.user_query)
+        action = self.task_classifier.classify(self.user_query)
         if action:
             return action
         else:
