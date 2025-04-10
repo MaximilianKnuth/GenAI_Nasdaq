@@ -1,7 +1,4 @@
-from Agents.data_transformation_agent import DataTransformationAgent
-from Agents.task_classification_agent import TaskClassificationAgent
-from Agents.table_join_agent import TableJoinAgent
-from Agents.data_validation_agent import DataValidator
+from Agents.execution_agent import ExecutionAgent
 import json
 
 
@@ -10,29 +7,8 @@ class MasterAgent:
         """
         Initializes the Master Agent with optional schema context.
         """
-        self.task_agent = TaskClassificationAgent()
-        self.execution_agents = {
-            "convert_datetime": DataTransformationAgent(),  
-            "join_tables": TableJoinAgent()
-        }
-        self.validation_agent = DataValidator()
+        self.execution_agent = None
 
     def process_query(self, user_query, df_dict,api_key):
-        """
-        Processes user query, classifies the task, and delegates execution.
-        Returns a structured pipeline log.
-        """
-        action = self.task_agent.classify(user_query)
-        
-        if action:
-            sub_agent = self.execution_agents.get(action)
-
-            if sub_agent:
-                print(f"Executing Task: {action}")
-                return sub_agent.execute(user_query, df_dict,api_key)
-            else:
-                print(f"No agent found for task: {action}")
-        else:
-            print("Could not classify the task.")
-
-        return None
+        self.execution_agent = ExecutionAgent(user_query, df_dict,api_key)
+        self.execution_agent.execute_query()

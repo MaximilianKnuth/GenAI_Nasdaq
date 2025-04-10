@@ -81,6 +81,7 @@ class DataTransformationAgent:
         """
         self.model = model
         self.data_validator = data_validator
+        self.name = "DataTransformationAgent"
     
     def set_data_validator(self,data_validator):
         self.data_validator = data_validator
