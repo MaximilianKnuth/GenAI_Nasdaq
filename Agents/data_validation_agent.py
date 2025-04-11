@@ -129,7 +129,7 @@ class DataValidator:
                 unique_count = df[col].nunique()
                 unique_pct = (unique_count / len(df)) * 100
                 col_quality['unique_count'] = unique_count
-                col_quality['unique_percentage'] = unique_pct
+                col_quality['unique_percentage'] = round(unique_pct,2)
                 
                 if unique_count == 1:
                     warnings.append(f"Column '{col}' has only one unique value")
@@ -139,11 +139,11 @@ class DataValidator:
             # Numeric column statistics
             if pd.api.types.is_numeric_dtype(df[col]):
                 col_quality.update({
-                    'min': df[col].min(),
-                    'max': df[col].max(),
-                    'mean': df[col].mean(),
-                    'median': df[col].median(),
-                    'std': df[col].std()
+                    'min': round(df[col].min(),2),
+                    'max': round(df[col].max(),2),
+                    'mean': round(df[col].mean(),2),
+                    'median': round(df[col].median(),2),
+                    'std': round(df[col].std(),2)
                 })
                 
                 # Check for suspicious numeric values
@@ -368,7 +368,7 @@ class DataValidator:
                     price_col = price_cols[0]
                     volume_col = volume_cols[0]
                     correlation = df[price_col].corr(df[volume_col])
-                    integrity_metrics['price_volume_correlation'] = correlation
+                    integrity_metrics['price_volume_correlation'] = round(correlation,2)
                 except:
                     pass
         

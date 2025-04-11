@@ -4,15 +4,17 @@ import pytz
 from transformers import pipeline
 from openai import OpenAI
 from Agents.chunk_table import trunk_table_execute
+from Agents.date_validation_agent import DateValidationAgent
 
 class TimezoneExtractor:
     def __init__(self, api_key):
         """
         Initializes the TimezoneExtractor with the DeepSeek model.
         """
+        
         self.model = "deepseek-chat"  # Use the correct model name
         self.client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com")
-
+        
     def extract_timezones(self, user_query):
         """
         Extracts the original and target timezones the user asks for from the user query.
@@ -82,6 +84,8 @@ class DataTransformationAgent:
         self.model = model
         self.data_validator = data_validator
         self.name = "DataTransformationAgent"
+        self.date_validation_agent = DateValidationAgent()
+        
     
     def set_data_validator(self,data_validator):
         self.data_validator = data_validator
@@ -125,6 +129,20 @@ class DataTransformationAgent:
         original_timezone, target_timezone = timezone_extractor.extract_timezones(user_query)
 
         validation_summary = self.data_validator.validate_dataframe(df_dict[table_name])
+        df = df_dict[table_name]
+        print("\n### Date Column Validation (Agentic) ###")
+        for col in datetime_columns:
+            try:
+                result = self.date_validation_agent.validate_date_column(df, col)
+                if result["valid"]:
+                    print(f"[{col}] VALID → {result['message']}")
+                else:
+                    print(f"[{col}] INVALID → {result['message']}")
+                    print(f"    Recommendation: {result['recommendation']}")
+            except Exception as e:
+                print(f"[{col}] DateValidationAgent failed: {str(e)}")
+                
+        result = self.date_validation_agent.validate_date_column(table_name, col)
         
         output = {
             "columns_converted": [],

@@ -12,7 +12,7 @@ if __name__ == "__main__":
     }
 
     # Prompt the user to input the DeepSeek API key
-    api_key = input("Please enter your DeepSeek API key: ").strip()
+    api_key = 'sk-74c415edef3f4a16b1ef8deb3839cf2a' #input("Please enter your DeepSeek API key: ").strip()
 
     # Load CSV files into DataFrames
     df_dict = {name: pd.read_csv(path) for name, path in file_paths.items()}

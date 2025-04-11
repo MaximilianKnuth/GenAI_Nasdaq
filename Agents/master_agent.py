@@ -36,7 +36,7 @@ class MasterAgent:
             return None
     
     def execute_sub_agent(self, sub_agent):
-        print(f"Executing {sub_agent.name}")
+        #print(f"Executing {sub_agent.name}")
         summary = sub_agent.execute(self.user_query, self.df_dict, self.api_key)
         if summary:
             return summary
