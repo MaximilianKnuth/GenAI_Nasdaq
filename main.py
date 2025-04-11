@@ -18,8 +18,7 @@ if __name__ == "__main__":
     df_dict = {name: pd.read_csv(path) for name, path in file_paths.items()}
 
     #sk-74c415edef3f4a16b1ef8deb3839cf2a
-    # Initialize Master Agent 
-    master_agent = MasterAgent()
+    
 
     # Example Queries
     queries = [
@@ -31,4 +30,5 @@ if __name__ == "__main__":
 
     for query in queries: 
         print(f"\nUser Query: {query}")
-        result = master_agent.process_query(query, df_dict,api_key)
+        master_agent = MasterAgent(query, df_dict,api_key)
+        master_agent.execute_task()
