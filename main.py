@@ -19,16 +19,23 @@ if __name__ == "__main__":
 
     #sk-74c415edef3f4a16b1ef8deb3839cf2a
     
+    # Example Queries
+    new_queries = [
+        # "Please convert transaction timestamps in the SKMS dataset from EST.",
+        "Please convert transaction timestamps in the EQR dataset from EST.",
+        
+    ]
+    
 
     # Example Queries
     queries = [
         # "Please convert transaction timestamps in the EQR dataset from EST to UTC.",
-        "Please convert transaction timestamps in the EQR dataset from EST.",
+        # "Please convert transaction timestamps in the SKMS dataset from EST.",
         # "Join EFR and EQR based on ticker",
         # "Check the distribution of eqr and sgr"
     ]
 
-    for query in queries: 
+    for query in new_queries: 
         print(f"\nUser Query: {query}")
         master_agent = MasterAgent(query, df_dict,api_key)
         master_agent.execute_task()

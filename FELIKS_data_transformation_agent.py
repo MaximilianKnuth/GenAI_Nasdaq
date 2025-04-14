@@ -4,7 +4,6 @@ import pytz
 from transformers import pipeline
 from openai import OpenAI
 from Agents.chunk_table import trunk_table_execute
-from Agents.date_validation_agent import DateValidationAgent
 from Agents.retrieval_agent import RAG_retrieval
 
 class TimezoneExtractor:
@@ -12,10 +11,9 @@ class TimezoneExtractor:
         """
         Initializes the TimezoneExtractor with the DeepSeek model.
         """
-        
         self.model = "deepseek-chat"  # Use the correct model name
         self.client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com")
-        
+
     def extract_timezones(self, user_query):
         """
         Extracts the original and target timezones the user asks for from the user query.
@@ -66,10 +64,11 @@ class TimezoneExtractor:
             original_timezone = pytz.timezone(timezones[0]) if timezones[0].lower() != "none" else None
             target_timezone = pytz.timezone(timezones[1]) if timezones[1].lower() != "none" else None
 
-            if original_timezone==None:
+            if original_timezone == None:
                 original_timezone = input("Please enter the original timezone when the table is built in pytz library format (if it's local, then enter 'UTC'): ").strip()
-            if target_timezone==None:
+            if target_timezone == None:
                 target_timezone = input("Please enter the target timezone you want to convert to in pytz library format (if it's local, then enter 'UTC'): ").strip()
+
             return [original_timezone, target_timezone]
 
         except Exception as e:
@@ -82,16 +81,14 @@ class DataTransformationAgent:
         """
         Uses the `llama3` model via Ollama.
         """
+        # Provide a default model name so it never ends up being `None`.
         self.model = model
         self.data_validator = data_validator
-        self.name = "DataTransformationAgent"
-        self.date_validation_agent = DateValidationAgent()
         self.client = None
-        
-    
-    def set_data_validator(self,data_validator):
+        # self.rag_agent = None
+
+    def set_data_validator(self, data_validator):
         self.data_validator = data_validator
-        
 
     def extract_table_and_columns_via_rag(self, user_query, df_dict, api_key):
 
@@ -134,7 +131,7 @@ class DataTransformationAgent:
         try:
             # Query the DeepSeek API
             self.client = OpenAI(api_key=api_key, base_url="https://api.deepseek.com")
-            #print(f"Parsing prompt for Deepseek: {parsing_prompt}")
+            print(f"Parsing prompt for Deepseek: {parsing_prompt}")
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=[
@@ -151,7 +148,7 @@ class DataTransformationAgent:
 
             # Split the output
             output_text = raw_output.split(", ")
-            #print(output_text)
+            print(output_text)
             if len(output_text) != 2:
                 raise ValueError(answer)
             else:
@@ -163,7 +160,7 @@ class DataTransformationAgent:
             return [None, None, answer]  # Return None for both timezones if extraction fails
 
         return table_name, datetime_columns, answer
-    
+
     def extract_table_and_columns(self, user_query, df_dict):
         
         # extract table name from query
@@ -177,7 +174,7 @@ class DataTransformationAgent:
         # extract date column from table
         try:
             summary, table_data = trunk_table_execute(table_name)
-            date_columns=table_data['Date']
+            date_columns = table_data['Date']
             return table_name, date_columns
 
         except Exception as e:
@@ -185,12 +182,9 @@ class DataTransformationAgent:
             return table_name, None
 
     def execute(self, user_query, df_dict, api_key):
-        print("Execute")
         """
         Converts datetime columns based on inferred timezones and provides a clean output.
         """
-        # Extracts relevant table and time-related columns
-        #table_name, datetime_columns = self.extract_table_and_columns(user_query, df_dict)
 
         # Attempt to extract table and columns via RAG
         table_name, datetime_columns, detailed_answer = self.extract_table_and_columns_via_rag(
@@ -198,21 +192,10 @@ class DataTransformationAgent:
             df_dict=df_dict,
             api_key=api_key
         )
-        #print(table_name)
-        #print(datetime_columns)
-        #print(detailed_answer)
         
-        if  table_name=='None' or datetime_columns=='None':
-            table_name=None
-            datetime_columns=None
+        if not table_name or not datetime_columns:
             print(detailed_answer)
-            print("Answer: ")
-            user_answer = input("").strip()
-            new_user_query = detailed_answer + ": "+ user_answer
-            
-            return self.execute(new_user_query,df_dict, api_key)
-            
-            
+            return None
 
         # df = df_dict[table_name]
 
@@ -220,25 +203,8 @@ class DataTransformationAgent:
         timezone_extractor = TimezoneExtractor(api_key)
         original_timezone, target_timezone = timezone_extractor.extract_timezones(user_query)
 
-        validation_summary = self.data_validator.validate_dataframe(df_dict[table_name])
-        df = df_dict[table_name]
-        print("\n### Date Column Validation ###")
-        
-        try:
-            result = self.date_validation_agent.validate_date_column(df, datetime_columns)
-            if result["valid"]:
-                print(f"[{datetime_columns}] VALID → {result['message']}")
-            else:
-                print(f"[{datetime_columns}] INVALID → {result['message']}")
-                print(f"    Recommendation: {result['recommendation']}")
-        except Exception as e:
-            print(f"[{datetime_columns}] DateValidationAgent failed: {str(e)}")
-                
-        result = self.date_validation_agent.validate_date_column(table_name, datetime_columns)
-        
         output = {
-            "Executed Table": table_name,
-            "columns_converted": datetime_columns,
+            "columns_converted": [],
             "original_timezone": original_timezone,
             "new_timezone": target_timezone
         }
@@ -250,12 +216,6 @@ class DataTransformationAgent:
         #         print(f"Converted {col} from {original_timezone} to {target_timezone} in {table_name}")
         #     except Exception as e:
         #         print(f"Error converting {col}: {e}")
-        
-        print("\n### Data Validation Summary ###")
-        print(f"0. Quality check passed: {validation_summary['valid']}")
-        print(f"1. Errors: {validation_summary['errors']}")
-        print(f"2. Warnings: {validation_summary['warnings']}")
-        print(f"3. Quality metrics: {validation_summary['quality_metrics']}")
 
         print("\n### Conversion Summary ###")
         print(f"0. Executed Table: {table_name}")
