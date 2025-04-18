@@ -135,7 +135,8 @@ class RAG_retrieval:
         # Using the newer text-embedding-3-small model
         embedding_model = OpenAIEmbeddings(
             openai_api_key=self.openai_api_key,
-            model="text-embedding-3-small"  # Using OpenAI's newer embedding model
+            model="text-embedding-3-small" # Using OpenAI's newer embedding model,
+            # Add a cache folder
         )
         
         # Create documents with detailed metadata
@@ -169,7 +170,8 @@ class RAG_retrieval:
             openai_api_key=self.deepseek_api_key,
             openai_api_base="https://api.deepseek.com/v1",
             model_name="deepseek-chat",
-            temperature=0 
+            temperature=0,
+            seed= 42
         )
 
         # Create QA chain with improved prompt
@@ -192,7 +194,7 @@ class RAG_retrieval:
         if not self.qa_chain:
             raise ValueError("QA chain not initialized. Please call create_qa_chain() first.")
 
-        print("Running query through QA chain...")
+        print("Processing query...")
         result = self.qa_chain.invoke({"query": query})
         
         return result

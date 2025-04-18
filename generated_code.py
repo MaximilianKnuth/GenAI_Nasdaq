@@ -1,33 +1,31 @@
 import pandas as pd
-import pytz
-from pathlib import Path
+from pytz import timezone
+import os
 
-# Define the file path
-file_path = '01_Data/SKMS.csv'
-
-# Load the dataset
+# Load dataset
 try:
-    df = pd.read_csv(file_path)
+    df = pd.read_csv('01_Data/SKMS.csv')
 except FileNotFoundError:
-    raise FileNotFoundError(f"The file {file_path} was not found. Please check the path.")
+    raise FileNotFoundError("The file '01_Data/SKMS.csv' was not found. Please check the path.")
 
-# Convert datetime column from UTC to EST
-if 'datetime' in df.columns:
+# Convert timezone from ET to UTC
+original_tz = timezone('US/Eastern')
+utc_tz = timezone('UTC')
+
+# Assuming the timestamp column is named 'New_date'
+if 'New_date' in df.columns:
     # Convert to datetime if not already
-    df['datetime'] = pd.to_datetime(df['datetime'])
+    df['New_date'] = pd.to_datetime(df['New_date'])
     
-    # Localize as UTC (since original is UTC)
-    df['datetime'] = df['datetime'].dt.tz_localize('UTC')
+    # Localize to Eastern Time (naive -> aware)
+    df['New_date'] = df['New_date'].dt.tz_localize(original_tz)
     
-    # Convert to EST
-    df['datetime'] = df['datetime'].dt.tz_convert('US/Eastern')
-    
-    # Remove timezone info if desired (optional)
-    df['datetime'] = df['datetime'].dt.tz_localize(None)
+    # Convert to UTC
+    df['New_date'] = df['New_date'].dt.tz_convert(utc_tz)
 else:
-    raise KeyError("The 'datetime' column was not found in the dataset.")
+    raise ValueError("Column 'New_date' not found in the dataset.")
 
 # Save transformed data
-output_path = Path(file_path)
-transformed_path = output_path.with_name(f"{output_path.stem}_transformed{output_path.suffix}")
-df.to_csv(transformed_path, index=False)
+base_path, ext = os.path.splitext('01_Data/SKMS.csv')
+output_path = f"{base_path}_transformed_3434343{ext}"
+df.to_csv(output_path, index=False)

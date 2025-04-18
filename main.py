@@ -21,8 +21,8 @@ if __name__ == "__main__":
     
     # Example Queries
     new_queries = [
-        # "Please convert transaction timestamps in the SKMS dataset from EST.",
-        "Please convert transaction timestamps in the EQR dataset from EST.",
+        "Please convert transaction timestamps in the SKMS dataset from ET timzeone to UTC timezone.",
+        #Please convert the datetime column in the EQR dataset from EST timezone to UTC timezone.",
         
     ]
     
