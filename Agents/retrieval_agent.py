@@ -194,7 +194,7 @@ class RAG_retrieval:
         if not self.qa_chain:
             raise ValueError("QA chain not initialized. Please call create_qa_chain() first.")
 
-        print("Processing query...")
+        #print("Processing query...")
         result = self.qa_chain.invoke({"query": query})
         
         return result
