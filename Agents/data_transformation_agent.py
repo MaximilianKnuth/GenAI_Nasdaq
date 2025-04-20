@@ -22,11 +22,12 @@ class TimezoneExtractor:
         Returns the timezones in pytz format as [transformed_original, transformed_target].
         If either timezone is not found, returns None for that timezone.
         """
-        all_timezones = pytz.all_timezones
+        #all_timezones = pytz.all_timezones
+        #print(all_timezones)
 
         # Define the prompt for extracting both timezones
         prompt = f"""
-        You are an AI assistant to find the corresponding timezones in **{user_query}** to their correspondence in **"{all_timezones}"**.
+        You are an AI assistant to find the current timezones and the target timezone in: **{user_query}**.
 
         ### TASK:
         1. Extract the **original timezone** (the timezone the data is currently in).
@@ -40,6 +41,9 @@ class TimezoneExtractor:
 
         ### OUTPUT FORMAT:
         Example: `US/Eastern, UTC`
+        Example: `None, UTC`
+        Example: `UTC, None`
+        Example: `None, None`
         """
 
         try:
@@ -56,7 +60,7 @@ class TimezoneExtractor:
 
             # Extract the raw output from the API response
             raw_output = response.choices[0].message.content.strip()
-
+            #print(f"Raw Output from Deepseek: {raw_output}")
             # Split the output into original and target timezones
             timezones = raw_output.split(", ")
             if len(timezones) != 2:
@@ -74,7 +78,9 @@ class TimezoneExtractor:
 
         except Exception as e:
             print(f"Error extracting timezones: {e}")
-            return [None, None]  # Return None for both timezones if extraction fails
+            original_timezone = input("Please enter the original timezone when the table is built in pytz library format (if it's local, then enter 'UTC'): ").strip()
+            target_timezone = input("Please enter the target timezone you want to convert to in pytz library format (if it's local, then enter 'UTC'): ").strip()
+            return [original_timezone, target_timezone]  # Return None for both timezones if extraction fails
 
 
 class DataTransformationAgent:
@@ -99,36 +105,42 @@ class DataTransformationAgent:
         pdf_folder = "01_Data/text_data"
         openai_api_key = "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"
         deepseek_api_key = "sk-74c415edef3f4a16b1ef8deb3839cf2a"
-
-        # Instantiate the RAG pipeline
-        rag = RAG_retrieval(pdf_folder, openai_api_key, deepseek_api_key)
         
-        all_timezones = pytz.all_timezones
-
-        # Define the prompt for extracting both timezones
-        prompt = f"""
-        Return me the table name and corresponding column names to perform this task
-        """
-        prompt = prompt + ": " + user_query
-
-        # Use RAG to get relevant info
-        answer = rag.test_pipeline(prompt)
-
+        try:
+            # Instantiate the RAG pipeline
+            rag = RAG_retrieval(pdf_folder, openai_api_key, deepseek_api_key)
+            all_timezones = pytz.all_timezones
+            
+            prompt = f"""
+            Return me the table name and corresponding column name that are of the type datetime the user asked for. If you can't find anything that matches, suggest other table names and column names and explicit name it suggestion.
+            **Output Format**
+            Exact  Matches: Your answer (if we have exact matches)
+            Suggestion: If we dont have exact matches, then return the table name and datetime column names that are similar to the task.
+            """
+        
+            prompt = prompt + ": " + user_query
+            answer = rag.test_pipeline(prompt)
+            print(f"Answer from RAG: {answer}")
+        except Exception as e:
+            print(f"Error extracting timezones: {e}")
         # Define the parsing prompt for extracting table name and datetime columns
+        
+        
         parsing_prompt = f"""
-        You are a exctructing AI assistant to find the corresponding table name and column name based on the **{user_query}** and based on the following information **{answer}**.
+        You are a helpful AI assistant to find the corresponding table name and column name based on the user query: {user_query}, and based on the returned information from the RAG that contains tables and column names: {answer}.
 
         ### TASK:
-        1. Extract the **table name** (the table name that the data is currently in).
-        2. Extract the **datetime columns** (the datetime columns the user wants to convert to).
-        3. If either timezone is not explicitly mentioned, return `None`.
+        1. Extract the table name (the table name that the data is currently in).
+        2. Extract the column names that where we can transform the datetime (the datetime columns the user wants to convert).
+        3. If you can't retrieve the table and column names, return `None`.
 
         ### IMPORTANT RULES:
-        - If a timezone is not found, return `None`.
         - Do not include any additional text or explanations.
+        - If the RAG is giving you suggestions and is not sure about the table or column that the user wants. Return None!
 
         ### OUTPUT FORMAT:
         Example: `TABLE NAME, COLUMN NAME`
+        Example: None
         """
 
         try:
@@ -138,16 +150,21 @@ class DataTransformationAgent:
             response = self.client.chat.completions.create(
                 model=self.model,
                 messages=[
-                    {"role": "system", "content": "You are a helpful assistant."},
+                    {"role": "system", "content": "You are a helpful assistant and only return either the the table and column names or 'None' ."},
                     {"role": "user", "content": parsing_prompt},
                 ],
                 stream=False,
                 temperature=0  # Set temperature to 0 for deterministic output
             )
-            #print(f"Response from Deepseek: {response}")
+            
 
             # Extract the raw output from the API response
             raw_output = response.choices[0].message.content.strip()
+            
+            #print(f"Raw Output from Deepseek: {raw_output}")
+            
+            if raw_output.lower() == "none":
+                return [None, None, answer]
 
             # Split the output
             output_text = raw_output.split(", ")
@@ -159,7 +176,7 @@ class DataTransformationAgent:
                 datetime_columns = output_text[1]
 
         except Exception as e:
-            print(f"Error extracting timezones: {e}")
+            #print(f"Error extracting timezones: {e}")
             return [None, None, answer]  # Return None for both timezones if extraction fails
 
         return table_name, datetime_columns, answer
@@ -185,7 +202,7 @@ class DataTransformationAgent:
             return table_name, None
 
     def execute(self, user_query, df_dict, api_key):
-        print("Execute")
+        #print("Execute")
         """
         Converts datetime columns based on inferred timezones and provides a clean output.
         """
@@ -200,15 +217,18 @@ class DataTransformationAgent:
         )
         #print(table_name)
         #print(datetime_columns)
-        #print(detailed_answer)
+        #print(f"detailed answer: {detailed_answer}")
         
-        if  table_name=='None' or datetime_columns=='None':
+        if  table_name is None or datetime_columns is None:
+            
             table_name=None
             datetime_columns=None
             print(detailed_answer)
-            print("Answer: ")
+            print("")
+            print("Please provide some clarification:")
+            print("USER INPUT:")
             user_answer = input("").strip()
-            new_user_query = detailed_answer + ": "+ user_answer
+            new_user_query = detailed_answer + " The user said: "+ user_answer
             
             return self.execute(new_user_query,df_dict, api_key)
             
@@ -218,7 +238,7 @@ class DataTransformationAgent:
 
         # Extract original and target timezones from the user query
         timezone_extractor = TimezoneExtractor(api_key)
-        original_timezone, target_timezone = timezone_extractor.extract_timezones(user_query)
+        original_timezone, target_timezone = timezone_extractor.extract_timezones(detailed_answer)
 
         validation_summary = self.data_validator.validate_dataframe(df_dict[table_name])
         df = df_dict[table_name]
@@ -234,7 +254,7 @@ class DataTransformationAgent:
         except Exception as e:
             print(f"[{datetime_columns}] DateValidationAgent failed: {str(e)}")
                 
-        result = self.date_validation_agent.validate_date_column(table_name, datetime_columns)
+        #result = self.date_validation_agent.validate_date_column(table_name, datetime_columns)
         
         output = {
             "Executed Table": table_name,

@@ -1,33 +1,35 @@
 import pandas as pd
-import pytz
-from pathlib import Path
+from pytz import timezone
+import os
 
-# Define the file path
-file_path = '01_Data/SKMS.csv'
+def convert_timezone():
+    try:
+        # Load the dataset
+        df = pd.read_csv('01_Data/SKMS.csv')
+        
+        # Check if 'New_date' column exists
+        if 'New_date' not in df.columns:
+            raise ValueError("Column 'New_date' not found in the dataset")
+            
+        # Convert to datetime and localize to US/Eastern
+        eastern = timezone('US/Eastern')
+        df['New_date'] = pd.to_datetime(df['New_date']).dt.tz_localize(eastern)
+        
+        # Convert to UTC
+        df['New_date'] = df['New_date'].dt.tz_convert('UTC')
+        
+        # Save transformed data
+        base_path, ext = os.path.splitext('01_Data/SKMS.csv')
+        output_path = f"{base_path}_transformed{ext}"
+        df.to_csv(output_path, index=False)
+        
+        print(f"Data successfully transformed and saved to {output_path}")
+        
+    except FileNotFoundError:
+        print("Error: The file '01_Data/SKMS.csv' was not found")
+    except pd.errors.EmptyDataError:
+        print("Error: The file '01_Data/SKMS.csv' is empty")
+    except Exception as e:
+        print(f"An unexpected error occurred: {str(e)}")
 
-# Load the dataset
-try:
-    df = pd.read_csv(file_path)
-except FileNotFoundError:
-    raise FileNotFoundError(f"The file {file_path} was not found. Please check the path.")
-
-# Convert datetime column from UTC to EST
-if 'datetime' in df.columns:
-    # Convert to datetime if not already
-    df['datetime'] = pd.to_datetime(df['datetime'])
-    
-    # Localize as UTC (since original is UTC)
-    df['datetime'] = df['datetime'].dt.tz_localize('UTC')
-    
-    # Convert to EST
-    df['datetime'] = df['datetime'].dt.tz_convert('US/Eastern')
-    
-    # Remove timezone info if desired (optional)
-    df['datetime'] = df['datetime'].dt.tz_localize(None)
-else:
-    raise KeyError("The 'datetime' column was not found in the dataset.")
-
-# Save transformed data
-output_path = Path(file_path)
-transformed_path = output_path.with_name(f"{output_path.stem}_transformed{output_path.suffix}")
-df.to_csv(transformed_path, index=False)
+convert_timezone()

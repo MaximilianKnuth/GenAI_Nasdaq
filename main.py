@@ -1,41 +1,226 @@
+# main.py  ── LangGraph 0.3.31 transparent runner
+import os
+import json
+from pathlib import Path
+from pprint import pprint
 import pandas as pd
-from Agents.master_agent import MasterAgent
-from docx import Document  # For reading .docx files
+import networkx as nx  # Graph export
+from state_schema import AgentState
+from langgraph_implementation import create_agent_workflow
+import traceback
+import sys
+from pprint import pformat  
+import logging
+import pathlib
 
-## ollama serve
-if __name__ == "__main__":
-    # Load CSVs into Pandas DataFrames
-    file_paths = {
-        "EFR": "01_Data/EFR.csv",
-        "EQR": "01_Data/EQR.csv",
-        "SKMS": "01_Data/SKMS.csv",
+# ── 1️⃣  make sure the log directory exists
+log_dir = pathlib.Path("logs")
+log_dir.mkdir(exist_ok=True)
+
+# ── 2️⃣  configure root logger: console + file
+log_format = "%(asctime)s  %(levelname)-8s %(message)s"
+date_fmt   = "%Y-%m-%d %H:%M:%S"
+
+logging.basicConfig(                     # this sets the console handler
+    level=logging.INFO,
+    format=log_format,
+    datefmt=date_fmt,
+)
+
+# extra file handler
+file_handler = logging.FileHandler(log_dir / "app.log", encoding="utf-8", mode='w')
+file_handler.setFormatter(logging.Formatter(log_format, date_fmt))
+file_handler.setLevel(logging.INFO)      # or DEBUG if you prefer
+logging.getLogger().addHandler(file_handler)
+
+logger = logging.getLogger("DataProcessingApp")
+
+logger.info("🚀  Logging initialised – console + logs/app.log")
+print("🚀  Logging initialised – console + logs/app.log")
+
+# ──────────────────────────────────────────────────────────────────────────
+# Configuration helpers
+# ──────────────────────────────────────────────────────────────────────────
+def load_api_keys() -> tuple[str, str]:
+    deepseek = 'sk-74c415edef3f4a16b1ef8deb3839cf2a'
+    openai   = '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'
+    if not (deepseek and openai):
+        raise RuntimeError("Set DEEPSEEK_API_KEY and OPENAI_API_KEY in your env")
+    return deepseek, openai
+
+def load_dataframes() -> dict[str, pd.DataFrame]:
+    base = Path("01_Data")
+    files = {
+        "EFR":  base / "EFR.csv",
+        "EQR":  base / "EQR.csv",
+        "SKMS": base / "SKMS.csv",
     }
+    return {name: pd.read_csv(path) for name, path in files.items()}
 
-    # Prompt the user to input the DeepSeek API key
-    api_key = 'sk-74c415edef3f4a16b1ef8deb3839cf2a' #input("Please enter your DeepSeek API key: ").strip()
+def to_dict_if_pairs(x):
+    """
+    If x looks like [('k', v), …] convert to {k: v}; otherwise return x unchanged.
+    """
+    if (
+        isinstance(x, list)
+        and all(isinstance(t, (list, tuple)) for t in x)
+    ):
+        return dict(x)
+    return x
 
-    # Load CSV files into DataFrames
-    df_dict = {name: pd.read_csv(path) for name, path in file_paths.items()}
+# ──────────────────────────────────────────────────────────────────────────
+# Pretty‑printing utilities
+# ──────────────────────────────────────────────────────────────────────────
+def print_banner(text: str) -> None:
+    bar = "─" * len(text)
+    print(f"\n\033[1m{bar}\n{text}\n{bar}\033[0m")  # bold ANSI
 
-    #sk-74c415edef3f4a16b1ef8deb3839cf2a
+def show_delta(delta,level=logging.INFO) -> None:
+    """
+    Pretty‑print the delta a node produced.
+    Works for dicts, lists, scalars – anything.
+    """
+    txt = pformat(delta or {}, indent=4, compact=True, width=120)
+    logger.log(level, "%s", txt)
     
-    # Example Queries
-    new_queries = [
-        # "Please convert transaction timestamps in the SKMS dataset from EST.",
-        "Please convert transaction timestamps in the EQR dataset from EST.",
+    if isinstance(delta, dict):
+        redacted = {
+            k: ("<dataframe>" if "df" in k else v)
+            for k, v in delta.items()
+            if k != "df_dict"
+        }
+        #pprint(redacted, indent=4, compact=True)
+
+    else:  # list, str, number, None, …
+        #pprint(delta, indent=4, compact=True)
+        pass
+
+def show_state(state: AgentState,level=logging.INFO) -> None:
+    minimal = state.model_dump(
+        exclude={"df_dict", "api_key", "openai_api_key"}
+    )
+    txt = pformat(minimal, indent=4, compact=True, width=120)
+    logger.log(level, "%s", txt)
+    #pprint(minimal, indent=4, compact=True)
+
+def log_banner(text: str, level=logging.INFO):
+    bar = "─" * len(text)
+    logger.log(level, "\n%s\n%s\n%s", bar, text, bar)
+# ──────────────────────────────────────────────────────────────────────────
+# The application wrapper
+# ──────────────────────────────────────────────────────────────────────────
+class DataProcessingApp:
+    def __init__(self) -> None:
+        self.api_key, self.openai_api_key = load_api_keys()
+        self.df_dict = load_dataframes()
+
+        # Build and compile the graph
+        self.workflow = create_agent_workflow()
+
+        # Optional: export the topology as DOT for offline inspection
+        self._export_graph()
+    # ------------------------------------------------------------------ #
+    def _export_graph(self) -> None:
+        """Save the workflow topology in human‑readable formats."""
+        g = self.workflow.get_graph()          # ← LangGraph Graph
+
+        # 1️⃣  Plain‑text ASCII preview (always works, no deps)
+        ascii_art = g.draw_ascii()
+        print("\n🖼  ASCII graph\n")
+        print(ascii_art)
+
+        # 2️⃣  Mermaid source (open in VS Code with the Mermaid preview)
+        mermaid = g.draw_mermaid()
+        Path("workflow.mmd").write_text(mermaid)
+        print("📄  Mermaid syntax saved ➜ workflow.mmd")
+
+        # 3️⃣  PNG image (requires `pydantic>=2.6`, `requests`, etc.)
+        try:
+            png_bytes = g.draw_mermaid_png(output_file_path="workflow.png")
+            print("🖼  PNG graph saved   ➜ workflow.png  ({} bytes)".format(len(png_bytes)))
+        except Exception as err:
+            print("⚠️  Could not render PNG –", err)
+    # ------------------------------------------------------------------ #
+    # inside DataProcessingApp
+    def process_query(self, user_query: str) -> None:
+        """Run a user query through the graph – fully logged."""
+        # 1️⃣ Build initial state
+        try:
+            state = AgentState(
+                user_query=user_query,
+                api_key=self.api_key,
+                openai_api_key=self.openai_api_key,
+                df_dict=self.df_dict,
+                first_run=True  # Start with first_run=True
+            )
+        except Exception:
+            log_banner("Failed to build AgentState", logging.ERROR)
+            logger.exception("init error")
+            return
         
-    ]
-    
+        log_banner(f"User query → {user_query}")
+        
+        # 2️⃣ Main loop (allows restart after human input)
+        while True:
+            try:
+                # Always start the workflow normally - no entry_point parameter
+                event_stream = self.workflow.stream(state, stream_mode="debug")
+            except Exception:
+                log_banner("Failed to start event stream", logging.ERROR)
+                logger.exception("stream error")
+                return
+                
+            for ev in event_stream:
+                try:
+                    # node start
+                    if ev["type"] == "task":
+                        logger.info("▶️ %s START", ev["payload"]["name"])
+                    # node end
+                    elif ev["type"] == "task_result":
+                        node = ev["payload"]["name"]
+                        delta = to_dict_if_pairs(ev["payload"]["result"])
+                        logger.info("✓ %s END — delta:", node)
+                        show_delta(delta)
+                        if isinstance(delta, dict):
+                            state = state.model_copy(update=delta)
+                        else:
+                            logger.warning("%s returned %s; skipping merge", node, type(delta).__name__)
+                        logger.info("current state:")
+                        show_state(state)
+                    # human-in-the-loop
+                    if state.needs_human_input:
+                        try:
+                            reply = input(f"\n❓ {state.human_message}\n> ").strip()
+                        except KeyboardInterrupt:
+                            logger.warning("Aborted by user")
+                            return
+                        state = state.model_copy(
+                            update=dict(human_response=reply, needs_human_input=False,first_run=False) 
+                        )
+                        break  # restart outer while loop with updated state
+                    # workflow finished
+                    elif ev["type"] == "workflow_end":
+                        log_banner("Workflow finished ✅")
+                        show_state(ev["payload"]["state"])
+                        return
+                except Exception:
+                    log_banner("Exception while handling event", logging.ERROR)
+                    logger.exception("event error")
+                    return
+            else:
+                # loop ended without break (no human input) – done
+                return
 
-    # Example Queries
-    queries = [
-        # "Please convert transaction timestamps in the EQR dataset from EST to UTC.",
-        # "Please convert transaction timestamps in the SKMS dataset from EST.",
-        # "Join EFR and EQR based on ticker",
-        # "Check the distribution of eqr and sgr"
+# ──────────────────────────────────────────────────────────────────────────
+# Main
+# ──────────────────────────────────────────────────────────────────────────
+if __name__ == "__main__":
+    app = DataProcessingApp()
+
+    example_queries = [
+         #"Please convert in the SKMS dataset the timezones.",
+         "Please convert the datetime column in the EQR dataset from EST timezone to UTC timezone.",
     ]
 
-    for query in new_queries: 
-        print(f"\nUser Query: {query}")
-        master_agent = MasterAgent(query, df_dict,api_key)
-        master_agent.execute_task()
+    for q in example_queries:
+        app.process_query(q)
