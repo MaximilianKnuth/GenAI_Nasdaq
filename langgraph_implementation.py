@@ -76,6 +76,11 @@ def router_node_join_table(state: AgentState) -> dict:
     if state.human_response:
         # Check what's missing and route to appropriate agent
         if not (state.table_name1 and state.join_column1 and state.table_name2 and state.join_column2):
+            print(state.table_name1 and state.join_column1 and state.table_name2 and state.join_column2)
+            print(state.table_name1)
+            print(state.join_column1)
+            print(state.table_name2)
+            print(state.join_column2)
             decision = "need_table"  # Go to RAG agent with human input context
         elif state.completeness_check_result is False:
             decision = "join_table_check"    
@@ -85,7 +90,7 @@ def router_node_join_table(state: AgentState) -> dict:
         return {"routing_decision": decision}
     
     # Standard routing logic (first pass)
-    if not (state.table_name and state.datetime_columns):
+    if not (state.table_name1 and state.join_column1 and state.table_name2 and state.join_column2):
         decision = "need_table"
     elif state.completeness_check_result is False:
         decision = "join_table_check"    

@@ -823,6 +823,7 @@ def join_table_check(state: AgentState) -> Dict[str, Any]:
             updates[tname] = None
             suggestions[f"{tname}_suggestions"] = list(df_dict.keys())
 
+    # check column existence if table exists
     if t1 in df_dict and t2 in df_dict:
         df1, df2 = df_dict[t1], df_dict[t2]
 
@@ -858,25 +859,28 @@ def join_table_check(state: AgentState) -> Dict[str, Any]:
         if warnings:
             msg += "\nWarnings:\n" + "\n".join(warnings)
         return {
-            "join_check_result": True,
+            "completeness_check_result": True,
             "needs_human_input": False,
             "human_message": msg,
         }
-
-    # Compose human-facing message
+    
+    # Generate helpful suggestions
+    suggestion_text = generate_smart_suggestions(state, missing, invalid, suggestions)
+    
+    # Construct helpful error message
     msg = ""
     if invalid:
-        msg += f"Invalid entries: {', '.join(invalid)}\n"
+        msg += f"Found invalid inputs: {', '.join(invalid)}.\n\n"
     if missing:
-        msg += f"Missing: {', '.join(missing)}\n"
-    if warnings:
-        msg += f"Warnings:\n" + "\n".join(warnings) + "\n"
-
-    msg += generate_smart_suggestions(state, missing, invalid, suggestions)
-
+        msg += f" Missing information: {', '.join(missing)}.\n\n"
+    
+    msg += suggestion_text
+    #msg += "\nPlease provide the corrected information using format: table=X, column=Y, orig_tz=Z, target_tz=W"
+    
+    # Set the human interaction flags
     updates["needs_human_input"] = True
     updates["human_message"] = msg
-
+    
     return updates
 
 # RAG Agent for table and column extraction if not defined - timezone

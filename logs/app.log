@@ -1,13 +1,13 @@
-2025-04-23 00:21:49  INFO     🚀  Logging initialised – console + logs/app.log
-2025-04-23 00:22:10  INFO     
+2025-04-23 12:50:33  INFO     🚀  Logging initialised – console + logs/app.log
+2025-04-23 12:50:34  INFO     
 ────────────────────────────────────────────────────
 User query → Please Join EFR and EQR based on ticker
 ────────────────────────────────────────────────────
-2025-04-23 00:22:10  INFO     ▶️ first_run_router START
-2025-04-23 00:22:10  INFO     ✓ first_run_router END — delta:
-2025-04-23 00:22:10  INFO     {'routing_decision': 'first_run'}
-2025-04-23 00:22:10  INFO     current state:
-2025-04-23 00:22:10  INFO     {   'completeness_check_result': False,
+2025-04-23 12:50:34  INFO     ▶️ first_run_router START
+2025-04-23 12:50:34  INFO     ✓ first_run_router END — delta:
+2025-04-23 12:50:34  INFO     {'routing_decision': 'first_run'}
+2025-04-23 12:50:34  INFO     current state:
+2025-04-23 12:50:34  INFO     {   'completeness_check_result': False,
     'datetime_columns': None,
     'error': None,
     'execution_summary': None,
@@ -29,12 +29,12 @@ User query → Please Join EFR and EQR based on ticker
     'target_timezone': None,
     'task_type': None,
     'user_query': 'Please Join EFR and EQR based on ticker'}
-2025-04-23 00:22:10  INFO     ▶️ task_classification START
-2025-04-23 00:22:10  INFO     HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
-2025-04-23 00:22:15  INFO     ✓ task_classification END — delta:
-2025-04-23 00:22:15  INFO     {'task_type': 'join_tables'}
-2025-04-23 00:22:15  INFO     current state:
-2025-04-23 00:22:15  INFO     {   'completeness_check_result': False,
+2025-04-23 12:50:34  INFO     ▶️ task_classification START
+2025-04-23 12:50:34  INFO     HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+2025-04-23 12:50:42  INFO     ✓ task_classification END — delta:
+2025-04-23 12:50:42  INFO     {'task_type': 'join_tables'}
+2025-04-23 12:50:42  INFO     current state:
+2025-04-23 12:50:42  INFO     {   'completeness_check_result': False,
     'datetime_columns': None,
     'error': None,
     'execution_summary': None,
@@ -56,12 +56,12 @@ User query → Please Join EFR and EQR based on ticker
     'target_timezone': None,
     'task_type': 'join_tables',
     'user_query': 'Please Join EFR and EQR based on ticker'}
-2025-04-23 00:22:15  INFO     ▶️ llm_first_pass START
-2025-04-23 00:22:15  INFO     HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
-2025-04-23 00:22:21  INFO     ✓ llm_first_pass END — delta:
-2025-04-23 00:22:21  INFO     {'join_column1': 'ticker', 'join_column2': 'ticker', 'table_name1': 'EFR', 'table_name2': 'EQR'}
-2025-04-23 00:22:21  INFO     current state:
-2025-04-23 00:22:21  INFO     {   'completeness_check_result': False,
+2025-04-23 12:50:42  INFO     ▶️ llm_first_pass START
+2025-04-23 12:50:43  INFO     HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+2025-04-23 12:50:49  INFO     ✓ llm_first_pass END — delta:
+2025-04-23 12:50:49  INFO     {'join_column1': 'ticker', 'join_column2': 'ticker', 'table_name1': 'EFR', 'table_name2': 'EQR'}
+2025-04-23 12:50:49  INFO     current state:
+2025-04-23 12:50:49  INFO     {   'completeness_check_result': False,
     'datetime_columns': None,
     'error': None,
     'execution_summary': None,
@@ -83,11 +83,11 @@ User query → Please Join EFR and EQR based on ticker
     'target_timezone': None,
     'task_type': 'join_tables',
     'user_query': 'Please Join EFR and EQR based on ticker'}
-2025-04-23 00:22:21  INFO     ▶️ task_router START
-2025-04-23 00:22:21  INFO     ✓ task_router END — delta:
-2025-04-23 00:22:21  INFO     {'routing_decision': 'execute_join_table_subagent'}
-2025-04-23 00:22:21  INFO     current state:
-2025-04-23 00:22:21  INFO     {   'completeness_check_result': False,
+2025-04-23 12:50:49  INFO     ▶️ task_router START
+2025-04-23 12:50:49  INFO     ✓ task_router END — delta:
+2025-04-23 12:50:49  INFO     {'routing_decision': 'execute_join_table_subagent'}
+2025-04-23 12:50:49  INFO     current state:
+2025-04-23 12:50:49  INFO     {   'completeness_check_result': False,
     'datetime_columns': None,
     'error': None,
     'execution_summary': None,
@@ -109,11 +109,11 @@ User query → Please Join EFR and EQR based on ticker
     'target_timezone': None,
     'task_type': 'join_tables',
     'user_query': 'Please Join EFR and EQR based on ticker'}
-2025-04-23 00:22:21  INFO     ▶️ router_join_table START
-2025-04-23 00:22:21  INFO     ✓ router_join_table END — delta:
-2025-04-23 00:22:21  INFO     {'routing_decision': 'need_table'}
-2025-04-23 00:22:21  INFO     current state:
-2025-04-23 00:22:21  INFO     {   'completeness_check_result': False,
+2025-04-23 12:50:49  INFO     ▶️ router_join_table START
+2025-04-23 12:50:49  INFO     ✓ router_join_table END — delta:
+2025-04-23 12:50:49  INFO     {'routing_decision': 'join_table_check'}
+2025-04-23 12:50:49  INFO     current state:
+2025-04-23 12:50:49  INFO     {   'completeness_check_result': False,
     'datetime_columns': None,
     'error': None,
     'execution_summary': None,
@@ -128,52 +128,95 @@ User query → Please Join EFR and EQR based on ticker
     'needs_human_input': False,
     'original_timezone': None,
     'rag_results': None,
-    'routing_decision': 'need_table',
+    'routing_decision': 'join_table_check',
     'table_name': None,
     'table_name1': 'EFR',
     'table_name2': 'EQR',
     'target_timezone': None,
     'task_type': 'join_tables',
     'user_query': 'Please Join EFR and EQR based on ticker'}
-2025-04-23 00:22:21  INFO     ▶️ join_table_rag_lookup START
-2025-04-23 00:22:21  WARNING  CropBox missing from /Page, defaulting to MediaBox
-2025-04-23 00:22:21  WARNING  CropBox missing from /Page, defaulting to MediaBox
-2025-04-23 00:22:24  WARNING  CropBox missing from /Page, defaulting to MediaBox
-2025-04-23 00:22:24  WARNING  CropBox missing from /Page, defaulting to MediaBox
-2025-04-23 00:22:27  INFO     Anonymized telemetry enabled. See                     https://docs.trychroma.com/telemetry for more information.
-2025-04-23 00:22:34  INFO     HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
-2025-04-23 00:22:35  INFO     HTTP Request: POST https://api.openai.com/v1/embeddings "HTTP/1.1 200 OK"
-2025-04-23 00:22:36  INFO     HTTP Request: POST https://api.deepseek.com/v1/chat/completions "HTTP/1.1 200 OK"
-2025-04-23 00:22:40  INFO     HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
-2025-04-23 00:22:45  INFO     ✓ join_table_rag_lookup END — delta:
-2025-04-23 00:22:45  INFO     {   'historical_response': '\n',
-    'human_message': 'Could not confidently complete the join info. RAG said:\n'
-                     'None\n'
-                     '\n'
-                     'Please clarify any missing table or column names.',
-    'human_response': None,
-    'needs_human_input': True,
-    'rag_results': 'None'}
-2025-04-23 00:22:45  INFO     current state:
-2025-04-23 00:22:45  INFO     {   'completeness_check_result': False,
+2025-04-23 12:50:49  INFO     ▶️ join_table_check START
+2025-04-23 12:50:49  INFO     ✓ join_table_check END — delta:
+2025-04-23 12:50:49  INFO     {   'completeness_check_result': True,
+    'human_message': 'Join check passed. You may proceed with merging.\n'
+                     'Warnings:\n'
+                     'This may be a many-to-many join. Expect large row growth.',
+    'needs_human_input': False}
+2025-04-23 12:50:49  INFO     current state:
+2025-04-23 12:50:49  INFO     {   'completeness_check_result': True,
     'datetime_columns': None,
     'error': None,
     'execution_summary': None,
     'first_run': True,
     'generated_code': None,
-    'historical_response': '\n',
-    'human_message': 'Could not confidently complete the join info. RAG said:\n'
-                     'None\n'
-                     '\n'
-                     'Please clarify any missing table or column names.',
+    'historical_response': None,
+    'human_message': 'Join check passed. You may proceed with merging.\n'
+                     'Warnings:\n'
+                     'This may be a many-to-many join. Expect large row growth.',
+    'human_response': None,
+    'join_column1': 'ticker',
+    'join_column2': 'ticker',
+    'missing_info_type': None,
+    'needs_human_input': False,
+    'original_timezone': None,
+    'rag_results': None,
+    'routing_decision': 'join_table_check',
+    'table_name': None,
+    'table_name1': 'EFR',
+    'table_name2': 'EQR',
+    'target_timezone': None,
+    'task_type': 'join_tables',
+    'user_query': 'Please Join EFR and EQR based on ticker'}
+2025-04-23 12:50:49  INFO     ▶️ router_join_table START
+2025-04-23 12:50:49  INFO     ✓ router_join_table END — delta:
+2025-04-23 12:50:49  INFO     {'routing_decision': 'done'}
+2025-04-23 12:50:49  INFO     current state:
+2025-04-23 12:50:49  INFO     {   'completeness_check_result': True,
+    'datetime_columns': None,
+    'error': None,
+    'execution_summary': None,
+    'first_run': True,
+    'generated_code': None,
+    'historical_response': None,
+    'human_message': 'Join check passed. You may proceed with merging.\n'
+                     'Warnings:\n'
+                     'This may be a many-to-many join. Expect large row growth.',
+    'human_response': None,
+    'join_column1': 'ticker',
+    'join_column2': 'ticker',
+    'missing_info_type': None,
+    'needs_human_input': False,
+    'original_timezone': None,
+    'rag_results': None,
+    'routing_decision': 'done',
+    'table_name': None,
+    'table_name1': 'EFR',
+    'table_name2': 'EQR',
+    'target_timezone': None,
+    'task_type': 'join_tables',
+    'user_query': 'Please Join EFR and EQR based on ticker'}
+2025-04-23 12:50:49  INFO     ▶️ validation START
+2025-04-23 12:50:49  INFO     ✓ validation END — delta:
+2025-04-23 12:50:49  INFO     {   'error': 'Error in validation: None',
+    'human_message': 'I encountered an error while validating the data: None\nPlease provide corrected information:',
+    'needs_human_input': True}
+2025-04-23 12:50:49  INFO     current state:
+2025-04-23 12:50:49  INFO     {   'completeness_check_result': True,
+    'datetime_columns': None,
+    'error': 'Error in validation: None',
+    'execution_summary': None,
+    'first_run': True,
+    'generated_code': None,
+    'historical_response': None,
+    'human_message': 'I encountered an error while validating the data: None\nPlease provide corrected information:',
     'human_response': None,
     'join_column1': 'ticker',
     'join_column2': 'ticker',
     'missing_info_type': None,
     'needs_human_input': True,
     'original_timezone': None,
-    'rag_results': 'None',
-    'routing_decision': 'need_table',
+    'rag_results': None,
+    'routing_decision': 'done',
     'table_name': None,
     'table_name1': 'EFR',
     'table_name2': 'EQR',
