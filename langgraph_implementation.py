@@ -8,7 +8,7 @@ from agent_functions import (
     timezone_extraction_agent,
     existence_and_column_type_check,
     join_table_check,
-    validation_agent,
+    # validation_agent,
     code_generation_agent,
     process_human_input,
     llm_first_pass
@@ -24,12 +24,14 @@ def task_router(state: AgentState) -> dict:
         decision = "execute_join_table_subagent"
     else:
         decision = "done"
-        
-    print("finished")    
     return {"routing_decision": decision}
 
+
 def router_node_timezone(state: AgentState) -> dict:
-    print("tz_router_node")
+    if state.first_run:
+        print("tz_router_node")
+    else:
+        print("reroute based on updated requirement for convert timezone")
     """
     Enhanced router that makes intelligent decisions after human input
     """
@@ -64,7 +66,10 @@ def router_node_timezone(state: AgentState) -> dict:
     return {"routing_decision": decision}
 
 def router_node_join_table(state: AgentState) -> dict:
-    print("jt_router_node")
+    if state.first_run:
+        print("jt_router_node")
+    else:
+        print("reroute based on updated requirement for join tables")
     """
     Enhanced router that makes intelligent decisions after human input
     """
@@ -131,7 +136,7 @@ def create_agent_workflow():
     g.add_node("existence_and_column_type_check", existence_and_column_type_check)
     g.add_node("join_table_check", join_table_check)
     g.add_node("human_input", process_human_input)
-    g.add_node("validation", validation_agent)
+    # g.add_node("validation", validation_agent)
     g.add_node("code_generation", code_generation_agent)
 
     
@@ -143,16 +148,16 @@ def create_agent_workflow():
     # — normal edges —
     g.add_edge("task_classification", "llm_first_pass")
     g.add_edge("llm_first_pass","task_router")
-    g.add_edge("validation", "code_generation")
+    g.add_edge("human_input", "task_router") 
+    # g.add_edge("validation", "code_generation")
+    
     
     # - tz extraction edges - 
-    g.add_edge("human_input", "router_timezone") 
     g.add_edge("tz_rag_lookup", "existence_and_column_type_check")
     g.add_edge("tz_extractor", "existence_and_column_type_check")
     g.add_edge("existence_and_column_type_check", "router_timezone")
 
     # - jt extraction edges - 
-    g.add_edge("human_input", "router_join_table") 
     g.add_edge("join_table_rag_lookup", "join_table_check")
     g.add_edge("join_table_check", "router_join_table")
     
@@ -175,6 +180,7 @@ def create_agent_workflow():
         "execute_join_table_subagent": "router_join_table"
     }
 ) 
+    
     # timezone-Router conditional edges
     g.add_conditional_edges(
         "router_timezone",
@@ -184,7 +190,7 @@ def create_agent_workflow():
             "need_tz": "tz_extractor",
             "ask_human": "human_input",
             "existence_and_column_type_check": "existence_and_column_type_check",
-            "done": "validation",
+            "done": "code_generation",
         },
     )
 
@@ -196,7 +202,7 @@ def create_agent_workflow():
             "need_table": "join_table_rag_lookup",
             "ask_human": "human_input",
             "join_table_check": "join_table_check",
-            "done": "validation",
+            "done": "code_generation",
         },
     )
     

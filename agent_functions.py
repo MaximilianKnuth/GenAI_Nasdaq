@@ -71,6 +71,7 @@ def _ask_llm_for_timezones(
             {"role": "user", "content": user_query},
         ],
     )
+    
 
     content = rsp.choices[0].message.content.strip()
 
@@ -79,11 +80,11 @@ def _ask_llm_for_timezones(
         return None, None
 
     pieces = [p.strip() for p in content.split(",")[:2]]
-    tz_1 = _canonical_tz(pieces[0]) if len(pieces) > 0 else None
-    tz_2 = _canonical_tz(pieces[1]) if len(pieces) > 1 else None
+    # tz_1 = _canonical_tz(pieces[0]) if len(pieces) > 0 else None
+    # tz_2 = _canonical_tz(pieces[1]) if len(pieces) > 1 else None
 
-    _TZ_CACHE[user_query] = (tz_1, tz_2)
-    return tz_1, tz_2
+    # _TZ_CACHE[user_query] = (tz_1, tz_2)
+    return pieces[0], pieces[1]
 
 # Task Classification Agent
 def task_classification_agent(state: AgentState) -> Dict[str, Any]:
@@ -270,59 +271,59 @@ def timezone_extraction_agent(state: AgentState) -> Dict[str, Any]:
         # Clear human response as we're using it
         updates["human_response"] = None
     
-    # --- 1. Heuristic scan of the combined text ------------------------------
-    for token in combined_query.replace(",", " ").split():
-        tz = _canonical_tz(token)
-        if tz:
-            if not state.original_timezone:
-                updates["original_timezone"] = tz
-            elif not state.target_timezone:
-                updates["target_timezone"] = tz
-        if updates.get("original_timezone") and updates.get("target_timezone"):
-            break
+    # # --- 1. Heuristic scan of the combined text ------------------------------
+    # for token in combined_query.replace(",", " ").split():
+    #     tz = _canonical_tz(token)
+    #     if tz:
+    #         if not state.original_timezone:
+    #             updates["original_timezone"] = tz
+    #         elif not state.target_timezone:
+    #             updates["target_timezone"] = tz
+    #     if updates.get("original_timezone") and updates.get("target_timezone"):
+    #         break
 
     # --- 2. If still missing anything, call the LLM with combined context ----------------------
-    if not (
-        (state.original_timezone or updates.get("original_timezone"))
-        and (state.target_timezone or updates.get("target_timezone"))
-    ):
-        client = OpenAI(api_key=state.api_key, base_url="https://api.deepseek.com")
-        
-        # Enhanced prompt that includes both original query and human response
-        tz_extraction_prompt = f"""
-        Extract the original timezone and target timezone from this information:
-        
-        {combined_query}
-        
-        Return exactly two IANA timezone identifiers, comma separated (e.g., "US/Eastern, UTC").
-        If you cannot find both with confidence, reply 'NONE'.
-        """
-        
-        # Call LLM with enhanced context
-        rsp = client.chat.completions.create(
-            model="deepseek-chat",
-            temperature=0,
-            messages=[
-                {"role": "system", "content": "You are a timezone extraction specialist."},
-                {"role": "user", "content": tz_extraction_prompt},
-            ],
-        )
+    # if not (
+    #     (state.original_timezone or updates.get("original_timezone"))
+    #     and (state.target_timezone or updates.get("target_timezone"))
+    # ):
+    client = OpenAI(api_key=state.api_key, base_url="https://api.deepseek.com")
+    
+    # Enhanced prompt that includes both original query and human response
+    tz_extraction_prompt = f"""
+    Extract the original timezone and target timezone from this information:
+    
+    {combined_query}
+    
+    Return exactly two IANA timezone identifiers, comma separated (e.g., "US/Eastern, UTC").
+    If you cannot find both with confidence, reply 'NONE'.
+    """
+    
+    # Call LLM with enhanced context
+    rsp = client.chat.completions.create(
+        model="deepseek-chat",
+        temperature=0,
+        messages=[
+            {"role": "system", "content": "You are a timezone extraction specialist."},
+            {"role": "user", "content": tz_extraction_prompt},
+        ],
+    )
 
-        content = rsp.choices[0].message.content.strip()
+    content = rsp.choices[0].message.content.strip()
 
-        if content.upper() == "NONE":
-            orig, target = None, None
-        else:
-            pieces = [p.strip() for p in content.split(",")[:2]]
-            orig = _canonical_tz(pieces[0]) if len(pieces) > 0 else None
-            target = _canonical_tz(pieces[1]) if len(pieces) > 1 else None
+    if content.upper() == "NONE":
+        orig, target = None, None
+    else:
+        pieces = [p.strip() for p in content.split(",")[:2]]
+        orig = _canonical_tz(pieces[0]) if len(pieces) > 0 else None
+        target = _canonical_tz(pieces[1]) if len(pieces) > 1 else None
 
-        if orig and not (state.original_timezone or updates.get("original_timezone")):
-            updates["original_timezone"] = orig
-        if target and not (state.target_timezone or updates.get("target_timezone")):
-            updates["target_timezone"] = target
+    if orig and not (state.original_timezone or updates.get("original_timezone")):
+        updates["original_timezone"] = orig
+    if target and not (state.target_timezone or updates.get("target_timezone")):
+        updates["target_timezone"] = target
 
-    # --- 3. If still incomplete, defer to human --------------------------
+    # --- 3. If incomplete, defer to human --------------------------
     if not (
         (state.original_timezone or updates.get("original_timezone"))
         and (state.target_timezone or updates.get("target_timezone"))
@@ -478,113 +479,122 @@ def existence_and_column_type_check(state: AgentState) -> Dict[str, Any]: # chec
     return updates
 
 def generate_smart_suggestions(
-
-    state: AgentState, 
-    missing: List[str], 
-    invalid: List[str], 
+    state: AgentState,
+    missing: List[str],
+    invalid: List[str],
     suggestions: Dict[str, Any]
 ) -> str:
     print("generate_smart_suggestions")
-    """
-    Generate contextual suggestions using RAG and LLM based on what's missing or invalid.
-    """
+
     result = ""
     client = OpenAI(api_key=state.api_key, base_url="https://api.deepseek.com")
-    
-    # --- TABLE SUGGESTIONS ---
-    if "table name" in missing or any("table" in err for err in invalid):
-        # First use available tables from df_dict
-        if "available_tables" in suggestions:
-            result += f"📊 Available tables: {', '.join(suggestions['available_tables'])}\n\n"
-        
-        # Then augment with RAG if needed
-        try:
-            pdf_folder = "01_Data/text_data"
-            rag = RAG_retrieval(pdf_folder, state.openai_api_key, state.api_key)
+    pdf_folder = "01_Data/text_data"
+
+    if state.task_type == "convert_datetime":
+        # --- TABLE SUGGESTIONS ---
+        if "table name" in missing or any("table" in err for err in invalid):
+            # First use available tables from df_dict
+            if "available_tables" in suggestions:
+                result += f"📊 Available tables: {', '.join(suggestions['available_tables'])}\n\n"
             
-            rag_query = f"What tables would be most relevant for this query: {state.user_query}?"
-            table_info = rag.test_pipeline(rag_query)
-            result += f"💡 Suggested tables based on your query: {table_info}\n\n"
-        except Exception as e:
-            logging.warning(f"RAG suggestion error for tables: {str(e)}")
-    
-    # --- COLUMN SUGGESTIONS ---
-    if "datetime column" in missing or any("column" in err for err in invalid):
-        # First use available columns if we have a valid table
-        valid_table = state.table_name and state.table_name in state.df_dict
-        
-        if valid_table:
-            # Show datetime column suggestions if we have them
-            if "datetime_column_suggestions" in suggestions and suggestions["datetime_column_suggestions"]:
-                result += f"🕒 Potential datetime columns in '{state.table_name}': "
-                result += f"{', '.join(suggestions['datetime_column_suggestions'])}\n\n"
-            # Otherwise show all columns
-            elif "available_columns" in suggestions:
-                result += f"🔍 All columns in '{state.table_name}': "
-                result += f"{', '.join(suggestions['available_columns'][:10])}"
-                if len(suggestions['available_columns']) > 10:
-                    result += f" and {len(suggestions['available_columns']) - 10} more"
-                result += "\n\n"
-        
-        # Then try RAG for more context
-        try:
-            if valid_table:
+            # Then augment with RAG if needed
+            try:
                 pdf_folder = "01_Data/text_data"
                 rag = RAG_retrieval(pdf_folder, state.openai_api_key, state.api_key)
                 
-                rag_query = f"What datetime columns are in the {state.table_name} table that could be used for timezone conversion?"
-                column_info = rag.test_pipeline(rag_query)
-                result += f"💡 Suggested datetime columns in {state.table_name}: {column_info}\n\n"
-        except Exception as e:
-            logging.warning(f"RAG suggestion error for columns: {str(e)}")
-    
-    # --- TIMEZONE SUGGESTIONS ---
-    if "original timezone" in missing or "target timezone" in missing:
-        # Extract timezone info from query using LLM
-        prompt = f"""
-        Based on this user query: "{state.user_query}"
+                rag_query = f"What tables would be most relevant for this query: {state.user_query}?"
+                table_info = rag.test_pipeline(rag_query)
+                result += f"💡 Suggested tables based on your query: {table_info}\n\n"
+            except Exception as e:
+                logging.warning(f"RAG suggestion error for tables: {str(e)}")
         
-        Extract and suggest:
-        {' and '.join(['original timezone' if 'original timezone' in missing else '', 
-                      'target timezone' if 'target timezone' in missing else ''])}
-        
-        Return only valid IANA timezone identifiers (like US/Eastern, UTC, Europe/Berlin).
-        If the query mentions timezone abbreviations like ET, EST, PST, convert them to proper IANA identifiers.
-        Suggest the 3 most likely timezones for each missing field based on the query context.
-        
-        Format: "Original timezone suggestions: X, Y, Z. Target timezone suggestions: A, B, C."
-        If you can't find any specific timezone hints, suggest common ones like UTC, US/Eastern, etc.
-        """
-        
-        try:
-            response = client.chat.completions.create(
-                model="deepseek-chat",
-                messages=[
-                    {"role": "system", "content": "You are a helpful timezone suggestion assistant."},
-                    {"role": "user", "content": prompt},
-                ],
-                temperature=0.2
-            )
+        # --- COLUMN SUGGESTIONS ---
+        if "datetime column" in missing or any("column" in err for err in invalid):
+            # First use available columns if we have a valid table
+            valid_table = state.table_name and state.table_name in state.df_dict
             
-            tz_suggestions = response.choices[0].message.content.strip()
-            result += f"🌐 {tz_suggestions}\n\n"
-        except Exception as e:
-            logging.warning(f"Timezone suggestion error: {str(e)}")
-            # Minimal fallback
-            result += "🌐 Common timezones: UTC, US/Eastern, US/Pacific, Europe/London\n\n"
-    
-    # If we have an invalid input but couldn't generate specific suggestions, offer a RAG-based analysis
-    if invalid and not result:
+            if valid_table:
+                # Show datetime column suggestions if we have them
+                if "datetime_column_suggestions" in suggestions and suggestions["datetime_column_suggestions"]:
+                    result += f"🕒 Potential datetime columns in '{state.table_name}': "
+                    result += f"{', '.join(suggestions['datetime_column_suggestions'])}\n\n"
+                # Otherwise show all columns
+                elif "available_columns" in suggestions:
+                    result += f"🔍 All columns in '{state.table_name}': "
+                    result += f"{', '.join(suggestions['available_columns'][:10])}"
+                    if len(suggestions['available_columns']) > 10:
+                        result += f" and {len(suggestions['available_columns']) - 10} more"
+                    result += "\n\n"
+            
+            # Then try RAG for more context
+            try:
+                if valid_table:
+                    pdf_folder = "01_Data/text_data"
+                    rag = RAG_retrieval(pdf_folder, state.openai_api_key, state.api_key)
+                    
+                    rag_query = f"What datetime columns are in the {state.table_name} table that could be used for timezone conversion?"
+                    column_info = rag.test_pipeline(rag_query)
+                    result += f"💡 Suggested datetime columns in {state.table_name}: {column_info}\n\n"
+            except Exception as e:
+                logging.warning(f"RAG suggestion error for columns: {str(e)}")
+        
+        # --- TIMEZONE SUGGESTIONS ---
+        if "original timezone" in missing or "target timezone" in missing:
+            # Extract timezone info from query using LLM
+            prompt = f"""
+            Based on this user query: "{state.user_query}"
+            
+            Extract and suggest:
+            {' and '.join(['original timezone' if 'original timezone' in missing else '', 
+                        'target timezone' if 'target timezone' in missing else ''])}
+            
+            Return only valid IANA timezone identifiers (like US/Eastern, UTC, Europe/Berlin).
+            If the query mentions timezone abbreviations like ET, EST, PST, convert them to proper IANA identifiers.
+            Suggest the 3 most likely timezones for each missing field based on the query context.
+            
+            Format: "Original timezone suggestions: X, Y, Z. Target timezone suggestions: A, B, C."
+            If you can't find any specific timezone hints, suggest common ones like UTC, US/Eastern, etc.
+            """
+            
+            try:
+                response = client.chat.completions.create(
+                    model="deepseek-chat",
+                    messages=[
+                        {"role": "system", "content": "You are a helpful timezone suggestion assistant."},
+                        {"role": "user", "content": prompt},
+                    ],
+                    temperature=0.2
+                )
+                
+                tz_suggestions = response.choices[0].message.content.strip()
+                result += f"🌐 {tz_suggestions}\n\n"
+            except Exception as e:
+                logging.warning(f"Timezone suggestion error: {str(e)}")
+                # Minimal fallback
+                result += "🌐 Common timezones: UTC, US/Eastern, US/Pacific, Europe/London\n\n"
+        
+
+    elif state.task_type == "join_tables":
+        for key in ["table_name1", "table_name2"]:
+            if key in missing or any(key.split("_")[1] in err for err in invalid):
+                if suggestions.get(f"{key}_suggestions"):
+                    result += f"📊 Suggested {key}: {', '.join(suggestions[f'{key}_suggestions'])}\\n\\n"
+
+        for key in ["join_column1", "join_column2"]:
+            if key in missing or any(key.split("_")[1] in err for err in invalid):
+                parent = "table_name1" if "1" in key else "table_name2"
+                table = getattr(state, parent, None)
+                if table and table in state.df_dict:
+                    df = state.df_dict[table]
+                    result += f"🔗 Columns in {table}: {', '.join(df.columns[:10])}\\n\\n"
+
         try:
-            pdf_folder = "01_Data/text_data"
             rag = RAG_retrieval(pdf_folder, state.openai_api_key, state.api_key)
-            
-            rag_query = f"Given this query: '{state.user_query}', what tables and datetime columns would be most appropriate for timezone conversion?"
-            general_info = rag.test_pipeline(rag_query)
-            result += f"💡 Based on available data: {general_info}\n\n"
+            rag_output = rag.test_pipeline(f"Suggest compatible table pairs and join keys for this query: {state.user_query}")
+            result += f"💡 RAG-based suggestion: {rag_output}\\n\\n"
         except Exception as e:
-            logging.warning(f"RAG fallback suggestion error: {str(e)}")
-    
+            logging.warning(f"RAG fallback join suggestion error: {str(e)}")
+
     return result
 
 def next_step(state: AgentState) -> str:
@@ -600,7 +610,7 @@ def next_step(state: AgentState) -> str:
         return "need_tz"
     return "done"
 
-# Validation Agent
+# Validation Agent - useless currently
 def validation_agent(state: AgentState) -> Dict[str, Any]:
     print("validation_agent")
     """Validate the data and create execution summary"""
@@ -643,44 +653,98 @@ def validation_agent(state: AgentState) -> Dict[str, Any]:
             "human_message": f"I encountered an error while validating the data: {str(e)}\nPlease provide corrected information:"
         }
 
-# Code Generation Agent
+
 def code_generation_agent(state: AgentState) -> Dict[str, Any]:
-    """Generate code based on execution summary"""
+    """Generate code based on task type and execution context"""
     print("code_generation_agent")
     client = OpenAI(api_key=state.api_key, base_url="https://api.deepseek.com")
-    
-    file_path = f"01_Data/{state.table_name}.csv"
-    
-    # Get sample data for the prompt
-    try:
-        df = pd.read_csv(file_path, nrows=5)
-        sample_data = df.to_markdown(index=False)
-    except Exception as e:
-        sample_data = f"[Error reading {file_path}: {str(e)}]"
-    
-    # Generate the prompt for code generation
-    prompt = f"""
-    You are a Python code generation assistant. The user provided:
 
-    QUERY: "{state.user_query}{state.human_response}{state.historical_response}"
+    if state.task_type == "convert_datetime":
+        file_path = f"01_Data/{state.table_name}.csv"
+        try:
+            df = pd.read_csv(file_path, nrows=5)
+            sample_data = df.to_markdown(index=False)
+        except Exception as e:
+            sample_data = f"[Error reading {file_path}: {str(e)}]"
 
-    EXECUTION CONTEXT:
-    - Table: {state.table_name}
-    - Datetime columns to convert: {state.datetime_columns}
-    - Original timezone: {state.original_timezone}
-    - Target timezone: {state.target_timezone}
+        prompt = f"""
+        You are a Python code generation assistant. The user provided:
 
-    ### Dataset Preview (first 5 rows):
-    {sample_data}
+        QUERY: "{state.user_query}{state.human_response}{state.historical_response}"
 
-    TASK REQUIREMENTS:
-    1. Load the dataset from: '{file_path}'
-    2. Convert the datetime column(s) from {state.original_timezone} to {state.target_timezone}
-    3. Save the transformed data with '_transformed' suffix
-    4. Return ONLY the executable Python code without any Markdown formatting
-    5. Include proper error handling
-    6. Do not use ```python or ``` markers
-    """
+        EXECUTION CONTEXT:
+        - Table: {state.table_name}
+        - Datetime columns to convert: {state.datetime_columns}
+        - Original timezone: {state.original_timezone}
+        - Target timezone: {state.target_timezone}
+
+        ### Dataset Preview (first 5 rows):
+        {sample_data}
+
+        TASK REQUIREMENTS:
+        1. Load the dataset from: '{file_path}'
+        2. Convert the datetime column(s) from {state.original_timezone} to {state.target_timezone}
+        3. Save the transformed data with '_transformed' suffix
+        4. Return ONLY the executable Python code without any Markdown formatting
+        5. Include proper error handling
+        6. Do not use ```python or ``` markers
+        """
+        print(f'''
+        EXECUTION CONTEXT:
+        - Table: {state.table_name}
+        - Datetime columns to convert: {state.datetime_columns}
+        - Original timezone: {state.original_timezone}
+        - Target timezone: {state.target_timezone}
+        ''')
+        
+    elif state.task_type == "join_tables":
+        file_path1 = f"01_Data/{state.table_name1}.csv"
+        file_path2 = f"01_Data/{state.table_name2}.csv"
+        try:
+            df1 = pd.read_csv(file_path1)
+            df2 = pd.read_csv(file_path2)
+            sample_data = (
+                f"Table 1: {state.table_name1}\n"
+                f"{df1.to_markdown(index=False)}\n\n"
+                f"Table 2: {state.table_name2}\n"
+                f"{df2.to_markdown(index=False)}"
+            )
+        except Exception as e:
+            sample_data = f"[Error reading input files: {str(e)}]"
+
+        prompt = f"""
+        You are a Python code generation assistant. The user provided:
+
+        QUERY: "{state.user_query}{state.human_response}{state.historical_response}"
+
+        EXECUTION CONTEXT:
+        - Table 1: {state.table_name1}
+        - Join Column for table 1: {state.join_column1}
+        - Table 2: {state.table_name2}
+        - Join Column for table 2: {state.join_column2}
+
+        ### Dataset Preview (first 5 rows from each table):
+        {sample_data}
+
+        TASK REQUIREMENTS:
+        1. Load both datasets from '{file_path1}' and '{file_path2}'
+        2. Perform an inner join on {state.join_column1} from table 1 and {state.join_column2} from table 2
+        3. Save the result as 'joined_output.csv'
+        4. Return ONLY the executable Python code without any Markdown formatting
+        5. Include proper error handling
+        6. Do not use ```python or ``` markers
+        """
+
+        print(f'''
+        EXECUTION CONTEXT:
+        - Table 1: {state.table_name1}
+        - Join Column for table 1: {state.join_column1}
+        - Table 2: {state.table_name2}
+        - Join Column for table 2: {state.join_column2}
+        ''')
+        
+    else:
+        return {"error": "Unsupported task type for code generation."}
 
     response = client.chat.completions.create(
         model="deepseek-coder",
@@ -690,114 +754,148 @@ def code_generation_agent(state: AgentState) -> Dict[str, Any]:
         ],
         temperature=0
     )
-    
+
     code = response.choices[0].message.content.strip()
-    
-    # Clean code block markers if present
     if code.startswith('```python') and code.endswith('```'):
         code = code[9:-3].strip()
     elif code.startswith('```') and code.endswith('```'):
         code = code[3:-3].strip()
-    
-    # Save code to file
+
     with open("generated_code.py", "w") as f:
         f.write(code)
-    
+
     return {"generated_code": code}
 
-# Human Input Handler
+# Human Input Handler, update field based on human input, if input is invalid, find closest and ask for confirmation
 def process_human_input(state: AgentState) -> Dict[str, Any]:
     print("process_human_input")
-    """
-    Enhanced human input parser that handles more flexible input formats
-    and validates against actual dataframes.
-    """
+
     reply = (state.human_response or "").strip()
     if not reply:
         return {}
 
     updates: Dict[str, Any] = {}
+    updates["historical_response"]= (state.historical_response or "") + "\n" + (state.human_response or "")
+    
     client = OpenAI(api_key=state.api_key, base_url="https://api.deepseek.com")
-    
-    # # First try parsing key=value pairs
-    pairs_found = False
-    # for part in reply.split(","):
-    #     if "=" in part:
-    #         pairs_found = True
-    #         k, v = [p.strip() for p in part.split("=", 1)]
-    #         if k.lower() in ("table", "table_name"):
-    #             updates["table_name"] = v
-    #         elif k.lower() in ("column", "datetime_column", "columns", "datetime_columns"):
-    #             updates["datetime_columns"] = v
-    #         elif k.lower() in ("orig_tz", "original_timezone", "source_tz", "from_tz"):
-    #             updates["original_timezone"] = _canonical_tz(v) or v
-    #         elif k.lower() in ("target_tz", "target_timezone", "dest_tz", "to_tz"):
-    #             updates["target_timezone"] = _canonical_tz(v) or v
-    
-    # If no key=value pairs found, try using LLM to parse natural language response
-    if not pairs_found and len(reply) > 3:  # Ensure it's not just a short reply
+
+    # Task-specific prompt & expected keys
+    if state.task_type == "convert_datetime":
         prompt = f"""
-        Extract table name, datetime column, original timezone, and target timezone from this user response:
-        
+        Extract table name, datetime column, original timezone, and target timezone from the user's clarification.
+
         User query: "{state.user_query} {state.historical_response}"
         User response: "{reply}"
-        
-        Return a JSON object with these keys: table_name, datetime_columns, original_timezone, target_timezone
-        If any values can't be determined, use null.
+
+        Return a JSON object:
+        {{
+            "table_name": str or null,
+            "datetime_columns": str or null,
+            "original_timezone": str or null,
+            "target_timezone": str or null
+        }}
         """
-        
-        try:
-            response = client.chat.completions.create(
-                model="deepseek-chat",
-                messages=[
-                    {"role": "system", "content": "You are a helpful assistant that extracts structured data from text."},
-                    {"role": "user", "content": prompt},
-                ],
-                temperature=0
-            )
-            
-            content = response.choices[0].message.content.strip()
-            # Extract JSON from content in case there's text around it
-            import re
-            json_match = re.search(r'\{.*\}', content, re.DOTALL)
-            if json_match:
-                extracted = json.loads(json_match.group(0))
-                
-                # Update with extracted values if they're not None
-                for k, v in extracted.items():
-                    if v is not None and k in ["table_name", "datetime_columns", "original_timezone", "target_timezone"]:
-                        # Normalize timezones
-                        if k in ["original_timezone", "target_timezone"]:
-                            v = _canonical_tz(v) or v
-                        updates[k] = v
-        except Exception as e:
-            logging.warning(f"LLM extraction error: {str(e)}")
-    
-    # Validate and normalize the extracted values against the actual data
-    if "table_name" in updates and updates["table_name"] and state.df_dict:
-        # Check if the provided table exists
-        if updates["table_name"] not in state.df_dict:
-            # Try to find closest match
-            closest = None
-            min_distance = float('inf')
-            for tbl in state.df_dict.keys():
-                # Simple string distance (could use Levenshtein but keeping it simple)
-                distance = abs(len(tbl) - len(updates["table_name"]))
-                if distance < min_distance and updates["table_name"].lower() in tbl.lower() or tbl.lower() in updates["table_name"].lower():
-                    min_distance = distance
-                    closest = tbl
-            
+        expected_keys = ["table_name", "datetime_columns", "original_timezone", "target_timezone"]
+
+    elif state.task_type == "join_tables":
+        prompt = f"""
+        Extract the two table names and their join columns from the user's clarification.
+
+        User query: "{state.user_query} {state.historical_response}"
+        User response: "{reply}"
+
+        Return a JSON object:
+        {{
+            "table_name1": str or null,
+            "join_column1": str or null,
+            "table_name2": str or null,
+            "join_column2": str or null
+        }}
+        """
+        expected_keys = ["table_name1", "join_column1", "table_name2", "join_column2"]
+    else:
+        return {}
+
+    # LLM-based extraction
+    try:
+        response = client.chat.completions.create(
+            model="deepseek-chat",
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant that extracts structured data from text."},
+                {"role": "user", "content": prompt},
+            ],
+            temperature=0
+        )
+
+        content = response.choices[0].message.content.strip()
+
+        import re
+        json_match = re.search(r'\{.*\}', content, re.DOTALL)
+        if json_match:
+            extracted = json.loads(json_match.group(0))
+            for k in expected_keys:
+                v = extracted.get(k)
+                if v is not None:
+                    if "timezone" in k:
+                        v = _canonical_tz(v) or v
+                    updates[k] = v
+
+    except Exception as e:
+        logging.warning(f"LLM parsing error: {str(e)}")
+
+    suggestions = []
+    # Post-processing
+    if state.task_type == "convert_datetime":
+        if "table_name" in updates and updates["table_name"] not in state.df_dict:
+            closest = min(state.df_dict.keys(), key=lambda t: abs(len(t) - len(updates["table_name"])), default=None)
             if closest:
-                logging.info(f"Corrected table name from '{updates['table_name']}' to '{closest}'")
-                updates["table_name"] = closest
-    
-    # Clear human flag and mark as no longer first run
+                suggestions.append(f"❓ Table '{updates['table_name']}' not found. Did you mean '{closest}'?")
+                # Do not auto-correct
+                updates["table_name"] = None
+
+    elif state.task_type == "join_tables":
+        for table_key, col_key in [("table_name1", "join_column1"), ("table_name2", "join_column2")]:
+            table = updates.get(table_key)
+            column = updates.get(col_key)
+
+            # Suggest correction for table
+            if table and table not in state.df_dict:
+                closest = min(state.df_dict.keys(), key=lambda t: abs(len(t) - len(table)), default=None)
+                if closest:
+                    suggestions.append(f"❓ Table '{table}' not found. Did you mean '{closest}'?")
+                    updates[table_key] = None
+
+            # Suggest correction for column
+            if table and column and table in state.df_dict:
+                table_columns = state.df_dict[table].columns
+                if column not in table_columns:
+                    closest_col = min(
+                        table_columns,
+                        key=lambda c: abs(len(c) - len(column)) + (
+                            0 if column.lower() in c.lower() or c.lower() in column.lower() else 5),
+                        default=None
+                    )
+                    if closest_col:
+                        suggestions.append(f"❓ Column '{column}' not found in '{table}'. Did you mean '{closest_col}'?")
+                        updates[col_key] = None
+
     updates.update({
-        "needs_human_input": False, 
-        "human_message": None,
-        "first_run": False  # Mark that we've been through one cycle
+        "first_run": False,
     })
+
+    # Final output: if any suggestions, ask user for confirmation
+    if suggestions:
+        updates["needs_human_input"] = True
+        updates["human_message"] = "\n".join(suggestions) + "\n\nPlease confirm or correct the values."
+    else:
+        updates.update({
+            "needs_human_input": False,
+            "human_message": None,
+        })
+
+    
     return updates
+
 
 # Validation check for Join Table extrations
 def join_table_check(state: AgentState) -> Dict[str, Any]:
@@ -1006,7 +1104,7 @@ def llm_first_pass(state: AgentState) -> Dict[str, Any]:
 
         user_prompt = f"""
         Parse: "{state.user_query}"
-        Example: 'Convert timestamps in TableX from ET to UTC'
+        Example: 'Convert timestamps in TableX from EST to UTC'
         Output: {{
             "table_name": "TableX",
             "datetime_column": "timestamps",
@@ -1035,7 +1133,8 @@ def llm_first_pass(state: AgentState) -> Dict[str, Any]:
         - join_column1 (the column to join on in first table)
         - table_name2 (second table name that needs to be joined)
         - join_column2 (the column to join on in second table)
-
+        Use null for unknown that are not specified in query.
+        
         AVAILABLE TABLES:
         {table_overview}
         """

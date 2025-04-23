@@ -219,10 +219,11 @@ if __name__ == "__main__":
     app = DataProcessingApp()
 
     example_queries = [
-         #"Please convert in the SKMS dataset the timezones.",
-         #"Please convert the datetime column in the EQR dataset from EST timezone to UTC timezone.",
-         #"Please convert the datetime column in the SKMS dataset from EST timezone to UTC timezone.",
-         "Please Join EFR and EQR based on ticker"
+         # "Please convert the date column in the EQR dataset from EST timezone to UTC timezone.", # success 2 additional input - use SKMS - use New_date column
+         # "Please convert the date column in the SKMS dataset to UTC timezone.", # success 2 additional input - define original timezone - redefine column
+         # "Please Join EFR and EQR based on ticker" # success first run
+         # "Please Join EFR and EQR table based on Sales column" # success 1 additional input (define tz + redefine table) - use ticker/date column
+         "Please Join EFR and EQR table" # success 2 additional input -> use tickers column  -> use ticker column
     ]
 
     for q in example_queries:

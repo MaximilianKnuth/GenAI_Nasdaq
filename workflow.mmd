@@ -17,21 +17,18 @@ graph TD;
 	existence_and_column_type_check(existence_and_column_type_check)
 	join_table_check(join_table_check)
 	human_input(human_input)
-	validation(validation)
 	code_generation(code_generation)
 	__end__([<p>__end__</p>]):::last
 	__start__ --> first_run_router;
 	code_generation --> __end__;
 	existence_and_column_type_check --> router_timezone;
-	human_input --> router_join_table;
-	human_input --> router_timezone;
+	human_input --> task_router;
 	join_table_check --> router_join_table;
 	join_table_rag_lookup --> join_table_check;
 	llm_first_pass --> task_router;
 	task_classification --> llm_first_pass;
 	tz_extractor --> existence_and_column_type_check;
 	tz_rag_lookup --> existence_and_column_type_check;
-	validation --> code_generation;
 	first_run_router -. &nbsp;first_run&nbsp; .-> task_classification;
 	first_run_router -. &nbsp;human_input_needed&nbsp; .-> human_input;
 	first_run_router -. &nbsp;subsequent_run&nbsp; .-> task_router;
@@ -41,11 +38,11 @@ graph TD;
 	router_timezone -. &nbsp;need_tz&nbsp; .-> tz_extractor;
 	router_timezone -. &nbsp;ask_human&nbsp; .-> human_input;
 	router_timezone -.-> existence_and_column_type_check;
-	router_timezone -. &nbsp;done&nbsp; .-> validation;
+	router_timezone -. &nbsp;done&nbsp; .-> code_generation;
 	router_join_table -. &nbsp;need_table&nbsp; .-> join_table_rag_lookup;
 	router_join_table -. &nbsp;ask_human&nbsp; .-> human_input;
 	router_join_table -.-> join_table_check;
-	router_join_table -. &nbsp;done&nbsp; .-> validation;
+	router_join_table -. &nbsp;done&nbsp; .-> code_generation;
 	classDef default fill:#f2f0ff,line-height:1.2
 	classDef first fill-opacity:0
 	classDef last fill:#bfb6fc

@@ -1,13 +1,13 @@
-2025-04-23 12:50:33  INFO     🚀  Logging initialised – console + logs/app.log
-2025-04-23 12:50:34  INFO     
+2025-04-23 15:52:10  INFO     🚀  Logging initialised – console + logs/app.log
+2025-04-23 15:52:10  INFO     
 ────────────────────────────────────────────────────
 User query → Please Join EFR and EQR based on ticker
 ────────────────────────────────────────────────────
-2025-04-23 12:50:34  INFO     ▶️ first_run_router START
-2025-04-23 12:50:34  INFO     ✓ first_run_router END — delta:
-2025-04-23 12:50:34  INFO     {'routing_decision': 'first_run'}
-2025-04-23 12:50:34  INFO     current state:
-2025-04-23 12:50:34  INFO     {   'completeness_check_result': False,
+2025-04-23 15:52:10  INFO     ▶️ first_run_router START
+2025-04-23 15:52:10  INFO     ✓ first_run_router END — delta:
+2025-04-23 15:52:10  INFO     {'routing_decision': 'first_run'}
+2025-04-23 15:52:10  INFO     current state:
+2025-04-23 15:52:10  INFO     {   'completeness_check_result': False,
     'datetime_columns': None,
     'error': None,
     'execution_summary': None,
@@ -29,12 +29,12 @@ User query → Please Join EFR and EQR based on ticker
     'target_timezone': None,
     'task_type': None,
     'user_query': 'Please Join EFR and EQR based on ticker'}
-2025-04-23 12:50:34  INFO     ▶️ task_classification START
-2025-04-23 12:50:34  INFO     HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
-2025-04-23 12:50:42  INFO     ✓ task_classification END — delta:
-2025-04-23 12:50:42  INFO     {'task_type': 'join_tables'}
-2025-04-23 12:50:42  INFO     current state:
-2025-04-23 12:50:42  INFO     {   'completeness_check_result': False,
+2025-04-23 15:52:10  INFO     ▶️ task_classification START
+2025-04-23 15:52:11  INFO     HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+2025-04-23 15:52:15  INFO     ✓ task_classification END — delta:
+2025-04-23 15:52:15  INFO     {'task_type': 'join_tables'}
+2025-04-23 15:52:15  INFO     current state:
+2025-04-23 15:52:15  INFO     {   'completeness_check_result': False,
     'datetime_columns': None,
     'error': None,
     'execution_summary': None,
@@ -56,12 +56,12 @@ User query → Please Join EFR and EQR based on ticker
     'target_timezone': None,
     'task_type': 'join_tables',
     'user_query': 'Please Join EFR and EQR based on ticker'}
-2025-04-23 12:50:42  INFO     ▶️ llm_first_pass START
-2025-04-23 12:50:43  INFO     HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
-2025-04-23 12:50:49  INFO     ✓ llm_first_pass END — delta:
-2025-04-23 12:50:49  INFO     {'join_column1': 'ticker', 'join_column2': 'ticker', 'table_name1': 'EFR', 'table_name2': 'EQR'}
-2025-04-23 12:50:49  INFO     current state:
-2025-04-23 12:50:49  INFO     {   'completeness_check_result': False,
+2025-04-23 15:52:15  INFO     ▶️ llm_first_pass START
+2025-04-23 15:52:15  INFO     HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+2025-04-23 15:52:20  INFO     ✓ llm_first_pass END — delta:
+2025-04-23 15:52:20  INFO     {'join_column1': 'ticker', 'join_column2': 'ticker', 'table_name1': 'EFR', 'table_name2': 'EQR'}
+2025-04-23 15:52:20  INFO     current state:
+2025-04-23 15:52:20  INFO     {   'completeness_check_result': False,
     'datetime_columns': None,
     'error': None,
     'execution_summary': None,
@@ -83,11 +83,11 @@ User query → Please Join EFR and EQR based on ticker
     'target_timezone': None,
     'task_type': 'join_tables',
     'user_query': 'Please Join EFR and EQR based on ticker'}
-2025-04-23 12:50:49  INFO     ▶️ task_router START
-2025-04-23 12:50:49  INFO     ✓ task_router END — delta:
-2025-04-23 12:50:49  INFO     {'routing_decision': 'execute_join_table_subagent'}
-2025-04-23 12:50:49  INFO     current state:
-2025-04-23 12:50:49  INFO     {   'completeness_check_result': False,
+2025-04-23 15:52:20  INFO     ▶️ task_router START
+2025-04-23 15:52:20  INFO     ✓ task_router END — delta:
+2025-04-23 15:52:20  INFO     {'routing_decision': 'execute_join_table_subagent'}
+2025-04-23 15:52:20  INFO     current state:
+2025-04-23 15:52:20  INFO     {   'completeness_check_result': False,
     'datetime_columns': None,
     'error': None,
     'execution_summary': None,
@@ -109,11 +109,11 @@ User query → Please Join EFR and EQR based on ticker
     'target_timezone': None,
     'task_type': 'join_tables',
     'user_query': 'Please Join EFR and EQR based on ticker'}
-2025-04-23 12:50:49  INFO     ▶️ router_join_table START
-2025-04-23 12:50:49  INFO     ✓ router_join_table END — delta:
-2025-04-23 12:50:49  INFO     {'routing_decision': 'join_table_check'}
-2025-04-23 12:50:49  INFO     current state:
-2025-04-23 12:50:49  INFO     {   'completeness_check_result': False,
+2025-04-23 15:52:20  INFO     ▶️ router_join_table START
+2025-04-23 15:52:20  INFO     ✓ router_join_table END — delta:
+2025-04-23 15:52:20  INFO     {'routing_decision': 'join_table_check'}
+2025-04-23 15:52:20  INFO     current state:
+2025-04-23 15:52:20  INFO     {   'completeness_check_result': False,
     'datetime_columns': None,
     'error': None,
     'execution_summary': None,
@@ -135,15 +135,15 @@ User query → Please Join EFR and EQR based on ticker
     'target_timezone': None,
     'task_type': 'join_tables',
     'user_query': 'Please Join EFR and EQR based on ticker'}
-2025-04-23 12:50:49  INFO     ▶️ join_table_check START
-2025-04-23 12:50:49  INFO     ✓ join_table_check END — delta:
-2025-04-23 12:50:49  INFO     {   'completeness_check_result': True,
+2025-04-23 15:52:20  INFO     ▶️ join_table_check START
+2025-04-23 15:52:20  INFO     ✓ join_table_check END — delta:
+2025-04-23 15:52:20  INFO     {   'completeness_check_result': True,
     'human_message': 'Join check passed. You may proceed with merging.\n'
                      'Warnings:\n'
                      'This may be a many-to-many join. Expect large row growth.',
     'needs_human_input': False}
-2025-04-23 12:50:49  INFO     current state:
-2025-04-23 12:50:49  INFO     {   'completeness_check_result': True,
+2025-04-23 15:52:20  INFO     current state:
+2025-04-23 15:52:20  INFO     {   'completeness_check_result': True,
     'datetime_columns': None,
     'error': None,
     'execution_summary': None,
@@ -167,11 +167,11 @@ User query → Please Join EFR and EQR based on ticker
     'target_timezone': None,
     'task_type': 'join_tables',
     'user_query': 'Please Join EFR and EQR based on ticker'}
-2025-04-23 12:50:49  INFO     ▶️ router_join_table START
-2025-04-23 12:50:49  INFO     ✓ router_join_table END — delta:
-2025-04-23 12:50:49  INFO     {'routing_decision': 'done'}
-2025-04-23 12:50:49  INFO     current state:
-2025-04-23 12:50:49  INFO     {   'completeness_check_result': True,
+2025-04-23 15:52:20  INFO     ▶️ router_join_table START
+2025-04-23 15:52:20  INFO     ✓ router_join_table END — delta:
+2025-04-23 15:52:20  INFO     {'routing_decision': 'done'}
+2025-04-23 15:52:20  INFO     current state:
+2025-04-23 15:52:20  INFO     {   'completeness_check_result': True,
     'datetime_columns': None,
     'error': None,
     'execution_summary': None,
@@ -195,25 +195,66 @@ User query → Please Join EFR and EQR based on ticker
     'target_timezone': None,
     'task_type': 'join_tables',
     'user_query': 'Please Join EFR and EQR based on ticker'}
-2025-04-23 12:50:49  INFO     ▶️ validation START
-2025-04-23 12:50:49  INFO     ✓ validation END — delta:
-2025-04-23 12:50:49  INFO     {   'error': 'Error in validation: None',
-    'human_message': 'I encountered an error while validating the data: None\nPlease provide corrected information:',
-    'needs_human_input': True}
-2025-04-23 12:50:49  INFO     current state:
-2025-04-23 12:50:49  INFO     {   'completeness_check_result': True,
+2025-04-23 15:52:20  INFO     ▶️ code_generation START
+2025-04-23 15:52:21  INFO     HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+2025-04-23 15:52:31  INFO     ✓ code_generation END — delta:
+2025-04-23 15:52:31  INFO     {   'generated_code': 'import pandas as pd\n'
+                      '\n'
+                      'try:\n'
+                      '    # Load datasets\n'
+                      "    efr = pd.read_csv('01_Data/EFR.csv')\n"
+                      "    eqr = pd.read_csv('01_Data/EQR.csv')\n"
+                      '    \n'
+                      "    # Perform inner join on 'ticker' column\n"
+                      "    joined_df = pd.merge(efr, eqr, on='ticker', how='inner')\n"
+                      '    \n'
+                      '    # Save the result\n'
+                      "    joined_df.to_csv('joined_output.csv', index=False)\n"
+                      '    \n'
+                      'except FileNotFoundError as e:\n'
+                      '    print(f"Error: File not found - {e}")\n'
+                      'except pd.errors.EmptyDataError:\n'
+                      '    print("Error: One of the files is empty")\n'
+                      'except KeyError as e:\n'
+                      '    print(f"Error: Missing required column - {e}")\n'
+                      'except Exception as e:\n'
+                      '    print(f"An unexpected error occurred: {e}")'}
+2025-04-23 15:52:31  INFO     current state:
+2025-04-23 15:52:31  INFO     {   'completeness_check_result': True,
     'datetime_columns': None,
-    'error': 'Error in validation: None',
+    'error': None,
     'execution_summary': None,
     'first_run': True,
-    'generated_code': None,
+    'generated_code': 'import pandas as pd\n'
+                      '\n'
+                      'try:\n'
+                      '    # Load datasets\n'
+                      "    efr = pd.read_csv('01_Data/EFR.csv')\n"
+                      "    eqr = pd.read_csv('01_Data/EQR.csv')\n"
+                      '    \n'
+                      "    # Perform inner join on 'ticker' column\n"
+                      "    joined_df = pd.merge(efr, eqr, on='ticker', how='inner')\n"
+                      '    \n'
+                      '    # Save the result\n'
+                      "    joined_df.to_csv('joined_output.csv', index=False)\n"
+                      '    \n'
+                      'except FileNotFoundError as e:\n'
+                      '    print(f"Error: File not found - {e}")\n'
+                      'except pd.errors.EmptyDataError:\n'
+                      '    print("Error: One of the files is empty")\n'
+                      'except KeyError as e:\n'
+                      '    print(f"Error: Missing required column - {e}")\n'
+                      'except Exception as e:\n'
+                      '    print(f"An unexpected error occurred: {e}")',
     'historical_response': None,
-    'human_message': 'I encountered an error while validating the data: None\nPlease provide corrected information:',
+    'human_message': 'Join check passed. You may proceed with merging.\n'
+                     'Warnings:\n'
+                     'This may be a many-to-many join. Expect large row growth.',
     'human_response': None,
     'join_column1': 'ticker',
     'join_column2': 'ticker',
     'missing_info_type': None,
-    'needs_human_input': True,
+    'needs_human_input': False,
     'original_timezone': None,
     'rag_results': None,
     'routing_decision': 'done',
