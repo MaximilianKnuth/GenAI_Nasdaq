@@ -219,7 +219,8 @@ if __name__ == "__main__":
 
     example_queries = [
          #"Please convert in the SKMS dataset the timezones.",
-         "Please convert the datetime column in the EQR dataset from EST timezone to UTC timezone.",
+         #"Please convert the datetime column in the EQR dataset from EST timezone to UTC timezone.",
+         #"Join EFR and EQR based on ticker"
     ]
 
     for q in example_queries:

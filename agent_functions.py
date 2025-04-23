@@ -133,7 +133,7 @@ def rag_agent(state: AgentState) -> Dict[str, Any]:
         if state.human_response:
             combined_query = f"""
             Original query: {state.user_query}
-            User clarification: {state.human_response}
+            User clarification: {state.human_response}{state.historical_response}
             
             Based on both the original query and clarification:
             """
@@ -155,7 +155,7 @@ def rag_agent(state: AgentState) -> Dict[str, Any]:
         You are a helpful AI assistant to find the corresponding table name and column name based on:
         
         Original query: {state.user_query}
-        {"User clarification: " + state.human_response if state.human_response else ""}
+        {"User clarification: " + state.human_response if state.human_response else "" + state.historical_response if state.historical_response else ""}
         
         Based on the returned information from the RAG: {answer}
 
@@ -191,6 +191,7 @@ def rag_agent(state: AgentState) -> Dict[str, Any]:
                 "needs_human_input": True,
                 "human_message": f"I couldn't determine which table and column to use. {answer}\n\nPlease provide more details:",
                 "rag_results": answer,
+                "historical_response": (state.historical_response or "") + "\n" + (state.human_response or ""),
                 "human_response": None  # Clear human response since we've used it
             }
 
@@ -201,6 +202,7 @@ def rag_agent(state: AgentState) -> Dict[str, Any]:
                 "needs_human_input": True,
                 "human_message": f"I couldn't parse the table and column information. {answer}\n\nPlease specify which table and column to use:",
                 "rag_results": answer,
+                "historical_response": (state.historical_response or "") + "\n" + (state.human_response or ""),
                 "human_response": None  # Clear human response since we've used it
             }
         else:
@@ -210,6 +212,7 @@ def rag_agent(state: AgentState) -> Dict[str, Any]:
                 "table_name": table_name,
                 "datetime_columns": datetime_columns,
                 "rag_results": answer,
+                "historical_response": (state.historical_response or "") + "\n" + (state.human_response or ""),
                 "human_response": None  # Clear human response since we've used it
             }
 
@@ -218,6 +221,7 @@ def rag_agent(state: AgentState) -> Dict[str, Any]:
             "error": f"Error in RAG agent: {str(e)}",
             "needs_human_input": True,
             "human_message": "I encountered an error while trying to identify the table and columns. Please specify which table and column to use:",
+            "historical_response": (state.historical_response or "") + "\n" + (state.human_response or ""),
             "human_response": None  # Clear human response since we've used it
         }
 
@@ -262,7 +266,7 @@ def timezone_extraction_agent(state: AgentState) -> Dict[str, Any]:
     
     # Incorporate human input if available
     if state.human_response:
-        combined_query = f"{state.user_query}\nAdditional information: {state.human_response}"
+        combined_query = f"{state.user_query}\nAdditional information: {state.human_response} {state.historical_response}"
         # Clear human response as we're using it
         updates["human_response"] = None
     
@@ -658,7 +662,7 @@ def code_generation_agent(state: AgentState) -> Dict[str, Any]:
     prompt = f"""
     You are a Python code generation assistant. The user provided:
 
-    QUERY: "{state.user_query}"
+    QUERY: "{state.user_query}{state.human_response}{state.historical_response}"
 
     EXECUTION CONTEXT:
     - Table: {state.table_name}
@@ -715,27 +719,27 @@ def process_human_input(state: AgentState) -> Dict[str, Any]:
     updates: Dict[str, Any] = {}
     client = OpenAI(api_key=state.api_key, base_url="https://api.deepseek.com")
     
-    # First try parsing key=value pairs
+    # # First try parsing key=value pairs
     pairs_found = False
-    for part in reply.split(","):
-        if "=" in part:
-            pairs_found = True
-            k, v = [p.strip() for p in part.split("=", 1)]
-            if k.lower() in ("table", "table_name"):
-                updates["table_name"] = v
-            elif k.lower() in ("column", "datetime_column", "columns", "datetime_columns"):
-                updates["datetime_columns"] = v
-            elif k.lower() in ("orig_tz", "original_timezone", "source_tz", "from_tz"):
-                updates["original_timezone"] = _canonical_tz(v) or v
-            elif k.lower() in ("target_tz", "target_timezone", "dest_tz", "to_tz"):
-                updates["target_timezone"] = _canonical_tz(v) or v
+    # for part in reply.split(","):
+    #     if "=" in part:
+    #         pairs_found = True
+    #         k, v = [p.strip() for p in part.split("=", 1)]
+    #         if k.lower() in ("table", "table_name"):
+    #             updates["table_name"] = v
+    #         elif k.lower() in ("column", "datetime_column", "columns", "datetime_columns"):
+    #             updates["datetime_columns"] = v
+    #         elif k.lower() in ("orig_tz", "original_timezone", "source_tz", "from_tz"):
+    #             updates["original_timezone"] = _canonical_tz(v) or v
+    #         elif k.lower() in ("target_tz", "target_timezone", "dest_tz", "to_tz"):
+    #             updates["target_timezone"] = _canonical_tz(v) or v
     
     # If no key=value pairs found, try using LLM to parse natural language response
     if not pairs_found and len(reply) > 3:  # Ensure it's not just a short reply
         prompt = f"""
         Extract table name, datetime column, original timezone, and target timezone from this user response:
         
-        User query: "{state.user_query}"
+        User query: "{state.user_query} {state.historical_response}"
         User response: "{reply}"
         
         Return a JSON object with these keys: table_name, datetime_columns, original_timezone, target_timezone

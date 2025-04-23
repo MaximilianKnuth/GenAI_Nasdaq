@@ -40,6 +40,7 @@ class AgentState(BaseModel):
     needs_human_input: bool = Field(False, description="Flag indicating if human input is needed")
     human_message: Optional[str] = Field(None, description="Message to show to human when requesting input")
     human_response: Optional[str] = Field(None, description="Response from human")
+    historical_response: Optional[str] = Field(None, description="Previous Response from human")
     
     missing_info_type: Optional[str] = Field(None, description="Type of missing information: 'table', 'datetime', 'timezone'")
     

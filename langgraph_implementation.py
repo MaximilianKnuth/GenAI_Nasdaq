@@ -29,7 +29,7 @@ def router_node(state: AgentState) -> dict:
             decision = "need_tz"     # Go to timezone extractor with human input context
         elif state.completeness_check_result is False:
             decision = "completeness_check"    
-        else:
+        else: #Go to validation
             decision = "done"
             
         return {"routing_decision": decision}

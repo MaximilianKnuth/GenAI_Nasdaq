@@ -7,13 +7,16 @@ def convert_timezone():
         # Load the dataset
         df = pd.read_csv('01_Data/SKMS.csv')
         
-        # Check if 'New_date' column exists
+        # Check if New_date column exists
         if 'New_date' not in df.columns:
-            raise ValueError("Column 'New_date' not found in the dataset")
+            raise ValueError("New_date column not found in the dataset")
             
-        # Convert to datetime and localize to US/Eastern
-        eastern = timezone('US/Eastern')
-        df['New_date'] = pd.to_datetime(df['New_date']).dt.tz_localize(eastern)
+        # Convert to datetime if not already
+        df['New_date'] = pd.to_datetime(df['New_date'])
+        
+        # Localize to EST (US/Eastern) timezone
+        est = timezone('US/Eastern')
+        df['New_date'] = df['New_date'].dt.tz_localize(est)
         
         # Convert to UTC
         df['New_date'] = df['New_date'].dt.tz_convert('UTC')
@@ -28,8 +31,8 @@ def convert_timezone():
     except FileNotFoundError:
         print("Error: The file '01_Data/SKMS.csv' was not found")
     except pd.errors.EmptyDataError:
-        print("Error: The file '01_Data/SKMS.csv' is empty")
+        print("Error: The file is empty")
     except Exception as e:
-        print(f"An unexpected error occurred: {str(e)}")
+        print(f"An error occurred: {str(e)}")
 
 convert_timezone()
