@@ -11,12 +11,9 @@ def convert_timezone():
         if 'New_date' not in df.columns:
             raise ValueError("New_date column not found in the dataset")
             
-        # Convert to datetime if not already
-        df['New_date'] = pd.to_datetime(df['New_date'])
-        
-        # Localize to EST (US/Eastern) timezone
+        # Convert to datetime and localize to EST
         est = timezone('US/Eastern')
-        df['New_date'] = df['New_date'].dt.tz_localize(est)
+        df['New_date'] = pd.to_datetime(df['New_date']).dt.tz_localize(est)
         
         # Convert to UTC
         df['New_date'] = df['New_date'].dt.tz_convert('UTC')

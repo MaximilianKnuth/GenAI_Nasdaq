@@ -19,6 +19,12 @@ class AgentState(BaseModel):
     original_timezone: Optional[str] = Field(None, description="The original timezone")
     target_timezone: Optional[str] = Field(None, description="The target timezone")
     
+    # Join Table fields
+    table_name1: Optional[str] = Field(None, description="The name of the table 1 to be joined")
+    join_column1: Optional[str] = Field(None, description="The columns to be joined for table 1")
+    table_name2: Optional[str] = Field(None, description="The name of the table 2 to be joined")
+    join_column2: Optional[str] = Field(None, description="The columns to be joined for table 2")
+    
     # RAG results
     rag_results: Optional[str] = Field(None, description="Results from the RAG system")
     

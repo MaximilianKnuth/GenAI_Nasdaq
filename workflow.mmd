@@ -8,31 +8,44 @@ graph TD;
 	first_run_router(first_run_router)
 	llm_first_pass(llm_first_pass)
 	task_classification(task_classification)
-	router(router)
-	rag_lookup(rag_lookup)
+	task_router(task_router)
+	router_timezone(router_timezone)
+	router_join_table(router_join_table)
+	tz_rag_lookup(tz_rag_lookup)
+	join_table_rag_lookup(join_table_rag_lookup)
 	tz_extractor(tz_extractor)
-	completeness_check(completeness_check)
+	existence_and_column_type_check(existence_and_column_type_check)
+	join_table_check(join_table_check)
 	human_input(human_input)
 	validation(validation)
 	code_generation(code_generation)
 	__end__([<p>__end__</p>]):::last
 	__start__ --> first_run_router;
 	code_generation --> __end__;
-	completeness_check --> router;
-	human_input --> router;
-	llm_first_pass --> router;
-	rag_lookup --> completeness_check;
+	existence_and_column_type_check --> router_timezone;
+	human_input --> router_join_table;
+	human_input --> router_timezone;
+	join_table_check --> router_join_table;
+	join_table_rag_lookup --> join_table_check;
+	llm_first_pass --> task_router;
 	task_classification --> llm_first_pass;
-	tz_extractor --> completeness_check;
+	tz_extractor --> existence_and_column_type_check;
+	tz_rag_lookup --> existence_and_column_type_check;
 	validation --> code_generation;
 	first_run_router -. &nbsp;first_run&nbsp; .-> task_classification;
 	first_run_router -. &nbsp;human_input_needed&nbsp; .-> human_input;
-	first_run_router -. &nbsp;subsequent_run&nbsp; .-> router;
-	router -. &nbsp;need_table&nbsp; .-> rag_lookup;
-	router -. &nbsp;need_tz&nbsp; .-> tz_extractor;
-	router -. &nbsp;ask_human&nbsp; .-> human_input;
-	router -.-> completeness_check;
-	router -. &nbsp;done&nbsp; .-> validation;
+	first_run_router -. &nbsp;subsequent_run&nbsp; .-> task_router;
+	task_router -. &nbsp;execute_timezone_subagent&nbsp; .-> router_timezone;
+	task_router -. &nbsp;execute_join_table_subagent&nbsp; .-> router_join_table;
+	router_timezone -. &nbsp;need_table&nbsp; .-> tz_rag_lookup;
+	router_timezone -. &nbsp;need_tz&nbsp; .-> tz_extractor;
+	router_timezone -. &nbsp;ask_human&nbsp; .-> human_input;
+	router_timezone -.-> existence_and_column_type_check;
+	router_timezone -. &nbsp;done&nbsp; .-> validation;
+	router_join_table -. &nbsp;need_table&nbsp; .-> join_table_rag_lookup;
+	router_join_table -. &nbsp;ask_human&nbsp; .-> human_input;
+	router_join_table -.-> join_table_check;
+	router_join_table -. &nbsp;done&nbsp; .-> validation;
 	classDef default fill:#f2f0ff,line-height:1.2
 	classDef first fill-opacity:0
 	classDef last fill:#bfb6fc

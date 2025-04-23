@@ -118,8 +118,8 @@ def task_classification_agent(state: AgentState) -> Dict[str, Any]:
     # Update state
     return {"task_type": task_type}
 
-# RAG Agent for table and column identification
-def rag_agent(state: AgentState) -> Dict[str, Any]:
+# RAG Agent for table and column extraction if not defined - timezone task
+def tz_rag_agent(state: AgentState) -> Dict[str, Any]:
     print("rag_agent")
     """Enhanced RAG agent that incorporates human input when available"""
     pdf_folder = "01_Data/text_data"
@@ -348,8 +348,8 @@ def timezone_extraction_agent(state: AgentState) -> Dict[str, Any]:
 
     return updates
 
-def completeness_check(state: AgentState) -> Dict[str, Any]:
-    print("completeness_check")
+def existence_and_column_type_check(state: AgentState) -> Dict[str, Any]: # check if received or stored data is of the right type
+    print("existence_and_column_type_check")
     """
     Enhanced completeness check that validates:
     1. Table exists in df_dict
@@ -799,53 +799,258 @@ def process_human_input(state: AgentState) -> Dict[str, Any]:
     })
     return updates
 
+# Validation check for Join Table extrations
+def join_table_check(state: AgentState) -> Dict[str, Any]:
+    print("join_table_check")
+
+    missing = []
+    invalid = []
+    warnings = []
+    suggestions = {}
+    updates = {}
+
+    t1, t2 = state.table_name1, state.table_name2
+    c1, c2 = state.join_column1, state.join_column2
+
+    df_dict = state.df_dict or {}
+
+    # Check table existence
+    for tname, table in [("table_name1", t1), ("table_name2", t2)]:
+        if not table:
+            missing.append(tname)
+        elif table not in df_dict:
+            invalid.append(f"table '{table}' not found")
+            updates[tname] = None
+            suggestions[f"{tname}_suggestions"] = list(df_dict.keys())
+
+    if t1 in df_dict and t2 in df_dict:
+        df1, df2 = df_dict[t1], df_dict[t2]
+
+        # Check join column existence
+        for cname, table, df in [(c1, t1, df1), (c2, t2, df2)]:
+            if not cname:
+                missing.append(f"join column in table '{table}'")
+            elif cname not in df.columns:
+                invalid.append(f"column '{cname}' not found in table '{table}'")
+                updates[f"join_column{'1' if table == t1 else '2'}"] = None
+                suggestions[f"{'join_column1' if table == t1 else 'join_column2'}_suggestions"] = list(df.columns)
+
+        # Check type compatibility
+        if c1 in df1.columns and c2 in df2.columns:
+            type1, type2 = df1[c1].dtype, df2[c2].dtype
+            if type1 != type2:
+                warnings.append(f"Type mismatch: {t1}.{c1} is {type1}, {t2}.{c2} is {type2}")
+
+        # Check nulls
+        if c1 in df1.columns and df1[c1].isna().mean() > 0.1:
+            warnings.append(f"{t1}.{c1} has >10% missing values")
+        if c2 in df2.columns and df2[c2].isna().mean() > 0.1:
+            warnings.append(f"{t2}.{c2} has >10% missing values")
+
+        # Check cardinality (rough estimate of many-to-many)
+        unique1 = df1[c1].nunique() if c1 in df1.columns else 0
+        unique2 = df2[c2].nunique() if c2 in df2.columns else 0
+        if unique1 < len(df1) and unique2 < len(df2):
+            warnings.append("This may be a many-to-many join. Expect large row growth.")
+
+    if not missing and not invalid:
+        msg = "Join check passed. You may proceed with merging."
+        if warnings:
+            msg += "\nWarnings:\n" + "\n".join(warnings)
+        return {
+            "join_check_result": True,
+            "needs_human_input": False,
+            "human_message": msg,
+        }
+
+    # Compose human-facing message
+    msg = ""
+    if invalid:
+        msg += f"Invalid entries: {', '.join(invalid)}\n"
+    if missing:
+        msg += f"Missing: {', '.join(missing)}\n"
+    if warnings:
+        msg += f"Warnings:\n" + "\n".join(warnings) + "\n"
+
+    msg += generate_smart_suggestions(state, missing, invalid, suggestions)
+
+    updates["needs_human_input"] = True
+    updates["human_message"] = msg
+
+    return updates
+
+# RAG Agent for table and column extraction if not defined - timezone
+def join_table_rag_agent(state: AgentState) -> Dict[str, Any]:
+    print("join_table_rag")
+
+    pdf_folder = "01_Data/text_data"
+
+    try:
+        rag = RAG_retrieval(pdf_folder, state.openai_api_key, state.api_key)
+
+        known = {
+            "table_name1": state.table_name1,
+            "join_column1": state.join_column1,
+            "table_name2": state.table_name2,
+            "join_column2": state.join_column2
+        }
+
+        known_str = "\n".join(f"{k}: {v}" for k, v in known.items() if v is not None)
+
+        combined_query = f"""
+        User's original query: {state.user_query}
+        Known values:
+        {known_str}
+
+        Please help fill in the missing table name(s) or join column(s) using the known ones as anchor points.
+        """
+
+        rag_prompt = f"""
+        Based on the user's query and partial join info, infer any missing values.
+        If confident, return: Table1, JoinColumn1, Table2, JoinColumn2
+        If unsure or guessing, return: None
+        """
+
+        answer = rag.test_pipeline(rag_prompt)
+
+        parsing_prompt = f"""
+        Extract exactly 4 values from this RAG output:
+        {answer}
+
+        Return: Table1, JoinColumn1, Table2, JoinColumn2
+        Or return: None
+        """
+
+        client = OpenAI(api_key=state.api_key, base_url="https://api.deepseek.com")
+        response = client.chat.completions.create(
+            model="deepseek-chat",
+            messages=[
+                {"role": "system", "content": "Return either four comma-separated values or 'None'."},
+                {"role": "user", "content": parsing_prompt},
+            ],
+            temperature=0
+        )
+
+        raw_output = response.choices[0].message.content.strip()
+
+        if raw_output.lower() == "none":
+            return {
+                "needs_human_input": True,
+                "human_message": f"Could not confidently complete the join info. RAG said:\n{answer}\n\nPlease clarify any missing table or column names.",
+                "rag_results": answer,
+                "historical_response": (state.historical_response or "") + "\n" + (state.human_response or ""),
+                "human_response": None
+            }
+
+        parts = [s.strip() for s in raw_output.split(",")]
+        if len(parts) != 4:
+            return {
+                "needs_human_input": True,
+                "human_message": f"Could not parse 4 values from RAG output: {answer}\n\nPlease clarify the two tables and their join keys.",
+                "rag_results": answer,
+                "historical_response": (state.historical_response or "") + "\n" + (state.human_response or ""),
+                "human_response": None
+            }
+
+        return {
+            "table_name1": parts[0],
+            "join_column1": parts[1],
+            "table_name2": parts[2],
+            "join_column2": parts[3],
+            "rag_results": answer,
+            "historical_response": (state.historical_response or "") + "\n" + (state.human_response or ""),
+            "human_response": None
+        }
+
+    except Exception as e:
+        return {
+            "error": f"Error in join_table_rag_fill_in: {str(e)}",
+            "needs_human_input": True,
+            "human_message": "Something went wrong while attempting to complete the join information. Please fill in the missing details.",
+            "historical_response": (state.historical_response or "") + "\n" + (state.human_response or ""),
+            "human_response": None
+        }
+
 def llm_first_pass(state: AgentState) -> Dict[str, Any]:
     print("llm_first_pass")
-    """
-    One‑shot LLM extractor; canonicalises time‑zones and checks column names
-    against the actual dataframe columns for the mentioned table.
-    """
     
-    if all(getattr(state, f) for f in (
-        "table_name", "datetime_columns",
-        "original_timezone", "target_timezone")):
+    
+#if it's convert datetime task
+    if state.task_type == "convert_datetime":
+        if all(getattr(state, f) for f in (
+            "table_name", "datetime_columns", "original_timezone", "target_timezone")):
+            return {}
+
+        client = OpenAI(api_key=state.api_key, base_url="https://api.deepseek.com")
+
+        table_overview = "\n".join(
+            f"- Table '{tbl}' has columns: {', '.join(df.columns[:10])}"
+            for tbl, df in (state.df_dict or {}).items()
+        )
+
+        sys_prompt = f"""
+        You are a strict JSON generator. Extract:
+        - table_name
+        - datetime_column
+        - original_timezone (IANA)
+        - target_timezone (IANA)
+        Use null for unknowns.
+
+        AVAILABLE TABLES:
+        {table_overview}
+        """
+
+        user_prompt = f"""
+        Parse: "{state.user_query}"
+        Example: 'Convert timestamps in TableX from ET to UTC'
+        Output: {{
+            "table_name": "TableX",
+            "datetime_column": "timestamps",
+            "original_timezone": "US/Eastern",
+            "target_timezone": "UTC"
+        }}
+        """
+
+
+# if it's join_table task
+    elif state.task_type == "join_tables":
+        if all(getattr(state, f) for f in (
+            "table_name1", "join_column1", "table_name2", "join_column2")):
+            return {}
+
+        client = OpenAI(api_key=state.api_key, base_url="https://api.deepseek.com")
+
+        table_overview = "\n".join(
+            f"- Table '{tbl}' has columns: {', '.join(df.columns[:10])}"
+            for tbl, df in (state.df_dict or {}).items()
+        )
+
+        sys_prompt = f"""
+        Extract the following for a table join operation:
+        - table_name1 (first table name that needs to be joined)
+        - join_column1 (the column to join on in first table)
+        - table_name2 (second table name that needs to be joined)
+        - join_column2 (the column to join on in second table)
+
+        AVAILABLE TABLES:
+        {table_overview}
+        """
+
+        user_prompt = f"""
+        Parse: "{state.user_query}"
+        Example: 'Join EFR and EQR based on ticker'
+        Output: {{
+            "table_name1": "EFR",
+            "join_column1": "ticker",
+            "table_name2": "EQR",
+            "join_column2": "ticker"
+        }}
+        """
+
+    else:
         return {}
 
-    client = OpenAI(api_key=state.api_key, base_url="https://api.deepseek.com")
-
-    # Enhanced table overview with more explicit details
-    table_overview = "\n".join(
-        f"- Table '{tbl}' has columns: {', '.join(df.columns[:10])}"
-        for tbl, df in (state.df_dict or {}).items()
-    )
-
-    sys_prompt = f"""
-    You are a strict JSON generator. You must extract the following fields from the user query:
-      - table_name: The name of the dataset/table mentioned in the query
-      - datetime_column: The column containing timestamps/dates to convert
-      - original_timezone: The source timezone (extract from text, standardize to IANA format)
-      - target_timezone: The target timezone (extract from text, standardize to IANA format)
-
-    • For table_name, extract the exact table name mentioned in the query
-    • For datetime_column, look for mentions of timestamps/dates/columns
-    • For timezones, convert abbreviations (ET, EST, PST) to IANA format (US/Eastern, US/Pacific)
-    • Return a JSON dict with these 4 keys, use null for truly missing values
-
-    AVAILABLE TABLES AND THEIR COLUMNS:
-    {table_overview}
-    """
-
-    # More explicit user prompt with example parsing
-    user_prompt = f"""
-    Parse this query: "{state.user_query}"
-    
-    Example extraction:
-    From "Convert timestamps in TableX from ET to UTC"
-    Should extract: {{"table_name": "TableX", "datetime_column": "timestamps", "original_timezone": "US/Eastern", "target_timezone": "UTC"}}
-    
-    Return only valid JSON. Return null for values you cannot confidently extract.
-    """
-
+    # Run the LLM
     resp = client.chat.completions.create(
         model="deepseek-chat",
         temperature=0,
@@ -856,7 +1061,6 @@ def llm_first_pass(state: AgentState) -> Dict[str, Any]:
     ).choices[0].message.content.strip()
 
     try:
-        # Add pre-processing to handle possible text before/after JSON
         json_start = resp.find('{')
         json_end = resp.rfind('}') + 1
         if json_start >= 0 and json_end > 0:
@@ -864,40 +1068,37 @@ def llm_first_pass(state: AgentState) -> Dict[str, Any]:
             extracted = json.loads(json_str)
         else:
             extracted = json.loads(resp)
-            
-        #print(f"Extracted JSON: {extracted}")  # Debugging output
     except Exception as e:
         print(f"llm_first_pass could not parse output: {resp}. Error: {str(e)}")
         return {}
 
     updates = {}
 
-    # ---- canonicalise time‑zones --------------------------------------
-    for k in ("original_timezone", "target_timezone"):
-        if tz := extracted.get(k):
-            tz_can = _canonical_tz(tz)           # re‑use helper from tz node
-            if tz_can and getattr(state, k) is None:
-                updates[k] = tz_can
+    if state.task_type == "convert_datetime":
+        for k in ("original_timezone", "target_timezone"):
+            if tz := extracted.get(k):
+                tz_can = _canonical_tz(tz)
+                if tz_can and getattr(state, k) is None:
+                    updates[k] = tz_can
 
-    # ---- table / column ----------------------------------------------
-    tbl = extracted.get("table_name")
-    col = extracted.get("datetime_column")
-    
-    if tbl and getattr(state, "table_name") is None:
-        updates["table_name"] = tbl
+        tbl = extracted.get("table_name")
+        col = extracted.get("datetime_column")
+        if tbl and getattr(state, "table_name") is None:
+            updates["table_name"] = tbl
 
-    # Try to get column if table is known
-    if tbl and tbl in state.df_dict:
-        if col and col in state.df_dict[tbl].columns and state.datetime_columns is None:
-            updates["datetime_columns"] = col
-        # Look for datetime columns in the table as a suggestion for the next step
-        elif state.datetime_columns is None and state.df_dict[tbl].columns.size > 0:
-            # Find columns that might contain timestamps - store in state for later use
-            df = state.df_dict[tbl]
-            date_cols = [c for c in df.columns if any(kw in c.lower() for kw in ["time", "date", "timestamp", "dt"])]
-            if date_cols:
-                # Not setting this automatically, just storing as possible suggestions
-                updates["possible_datetime_columns"] = date_cols
+        if tbl and tbl in state.df_dict:
+            if col and col in state.df_dict[tbl].columns and state.datetime_columns is None:
+                updates["datetime_columns"] = col
+            elif state.datetime_columns is None:
+                df = state.df_dict[tbl]
+                date_cols = [c for c in df.columns if any(kw in c.lower() for kw in ["time", "date", "timestamp", "dt"])]
+                if date_cols:
+                    updates["possible_datetime_columns"] = date_cols
 
-    #print(f"llm_first_pass updates: {updates}")  # Debugging
+    elif state.task_type == "join_tables":
+        for field in ("table_name1", "join_column1", "table_name2", "join_column2"):
+            if field in extracted and getattr(state, field) is None:
+                updates[field] = extracted[field]
+
     return updates
+

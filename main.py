@@ -106,6 +106,7 @@ def show_state(state: AgentState,level=logging.INFO) -> None:
 def log_banner(text: str, level=logging.INFO):
     bar = "─" * len(text)
     logger.log(level, "\n%s\n%s\n%s", bar, text, bar)
+    
 # ──────────────────────────────────────────────────────────────────────────
 # The application wrapper
 # ──────────────────────────────────────────────────────────────────────────
@@ -220,7 +221,8 @@ if __name__ == "__main__":
     example_queries = [
          #"Please convert in the SKMS dataset the timezones.",
          #"Please convert the datetime column in the EQR dataset from EST timezone to UTC timezone.",
-         #"Join EFR and EQR based on ticker"
+         #"Please convert the datetime column in the SKMS dataset from EST timezone to UTC timezone.",
+         "Please Join EFR and EQR based on ticker"
     ]
 
     for q in example_queries:
