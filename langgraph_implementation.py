@@ -18,10 +18,10 @@ from agent_functions import (
 
 
 def task_router(state: AgentState) -> dict:
-    if state.task_step==1:
-        print("route to specific task agent")
+    if state.task_step==1 and state.first_run:
+        print("🟢 route to specific task agent")
     else:
-        print("route to subsequent task agent")
+        print("🟢 route to subsequent task agent")
 
     # Standard routing logic (first pass)
     task=state.task_list[state.task_step-1]
@@ -34,15 +34,14 @@ def task_router(state: AgentState) -> dict:
     return {"routing_decision": decision}
 
 def router_node_timezone(state: AgentState) -> dict:
-    if state.first_run:
-        print("tz_router_node")
+    if state.first_run and state.first_run:
+        print("🟢 tz_router_node")
 
     """
     Enhanced router that makes intelligent decisions after human input
     """
     # First check if human input is needed
     if state.needs_human_input:
-        print("yes")
         return {"routing_decision": "ask_human"}
     
     # After human input was processed, route based on what's still missing
@@ -82,8 +81,8 @@ def router_node_timezone(state: AgentState) -> dict:
     return {"routing_decision": decision,"task_step": state.task_step,"first_run": state.first_run,"completeness_check_result":state.completeness_check_result}
 
 def router_node_join_table(state: AgentState) -> dict:
-    if state.first_run:
-        print("jt_router_node")
+    if state.first_run and state.first_run:
+        print("🟢 jt_router_node")
 
     """
     Enhanced router that makes intelligent decisions after human input
@@ -198,7 +197,6 @@ def create_agent_workflow():
             "pass": "llm_first_pass"
         }
     )
-
     
     g.add_conditional_edges(
     "first_run_router",
