@@ -796,7 +796,7 @@ def code_generation_agent(state: AgentState) -> Dict[str, Any]:
             QUERY: "{state.user_query}"
 
             EXECUTION CONTEXT:
-            - Table: {state.table_name}
+            - Table: {state.table_name} (located at {file_path})
             - Datetime columns to convert: {state.datetime_columns}
             - Original timezone: {state.original_timezone}
             - Target timezone: {state.target_timezone}
@@ -806,11 +806,11 @@ def code_generation_agent(state: AgentState) -> Dict[str, Any]:
 
             TASK REQUIREMENTS:
             1. Load the dataset from: '{file_path}'
-            2. Convert the datetime column(s) from {state.original_timezone} to {state.target_timezone}
-            3. Save the transformed data with '_transformed' suffix
-            4. Return ONLY the executable Python code without any Markdown formatting
-            5. Include proper error handling
-            6. Do not use ```python or ``` markers
+            2. Convert the datetime columns from {state.original_timezone} to {state.target_timezone}.
+            3. Save the transformed dataset as '{state.table_name}_transformed.csv'.
+            4. If the file cannot be found or loaded, print the error message and call `sys.exit(1)`.
+            5. Return ONLY the executable Python code without any Markdown formatting.
+            6. Do not use ```python or ``` markers.
             """
 
         elif task == "join_tables":
@@ -834,21 +834,23 @@ def code_generation_agent(state: AgentState) -> Dict[str, Any]:
             QUERY: "{state.user_query}"
 
             EXECUTION CONTEXT:
-            - Table 1: {state.table_name1}
+            - Table 1: {state.table_name1} (located at {file_path1})
             - Join Column for table 1: {state.join_column1}
-            - Table 2: {state.table_name2}
+            - Table 2: {state.table_name2} (located at {file_path2})
             - Join Column for table 2: {state.join_column2}
 
             ### Dataset Preview (first 5 rows from each table):
             {sample_data}
 
             TASK REQUIREMENTS:
-            1. Load both datasets from '{file_path1}' and '{file_path2}'
-            2. Perform an inner join on {state.join_column1} from table 1 and {state.join_column2} from table 2
-            3. Save the result as 'joined_output.csv'
-            4. Return ONLY the executable Python code without any Markdown formatting or explanation.
-            5. Include proper error handling
-            6. Do not use ```python or ``` markers
+            1. Load datasets from the exact file paths:
+            - '{file_path1}'
+            - '{file_path2}'
+            2. Perform an inner join on {state.join_column1} from table 1 and {state.join_column2} from table 2.
+            3. Save the result as 'joined_output.csv'.
+            4. If any file cannot be found or loaded, print the error message and call `sys.exit(1)`.
+            5. Return ONLY the executable Python code without any Markdown formatting.
+            6. Do not use ```python or ``` markers.
             """
 
         else:
@@ -870,7 +872,7 @@ def code_generation_agent(state: AgentState) -> Dict[str, Any]:
                     sample_data = f"[Error reading {file_path}: {str(e)}]"
                 execution_context.append(f"""
                 Step {task_step}: Convert Datetime
-                - Table: {state.table_name}
+                - Table: {state.table_name} (located at {file_path})
                 - Datetime columns to convert: {state.datetime_columns}
                 - Original timezone: {state.original_timezone}
                 - Target timezone: {state.target_timezone}
@@ -893,9 +895,9 @@ def code_generation_agent(state: AgentState) -> Dict[str, Any]:
                     sample_data = f"[Error reading input files: {str(e)}]"
                 execution_context.append(f"""
                 Step {task_step}: Join Tables
-                - Table 1: {state.table_name1}
+                - Table 1: {state.table_name1} (located at {file_path1})
                 - Join Column for table 1: {state.join_column1}
-                - Table 2: {state.table_name2}
+                - Table 2: {state.table_name2} (located at {file_path2})
                 - Join Column for table 2: {state.join_column2}
                 """)
                 dataset_previews.append(f"Step {task_step} Dataset Preview:\n{sample_data}")
@@ -919,14 +921,17 @@ def code_generation_agent(state: AgentState) -> Dict[str, Any]:
 
         ### Dataset Previews:
         {full_dataset_preview}
-
+            
         TASK REQUIREMENTS:
         1. Execute each task sequentially.
         2. Ensure output of each step is used correctly in the next step.
-        3. Save outputs properly at each step.
+        3. Save outputs properly at each step into csv files.
         4. Return ONLY the full executable Python code without Markdown formatting or explanation.
         5. Include proper error handling.
         6. Do not use ```python or ``` markers.
+        7. If any critical step like loading files fails, after printing the error, use `sys.exit(1)` to exit the script with an error code.
+        8. Import `sys` if needed.
+        9. Save final output file in "output.csv"
         """
 
     # ---- Now actually call deepseek and run/fix code ----

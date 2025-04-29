@@ -1,47 +1,52 @@
 import pandas as pd
-from pytz import timezone
+import pytz
+from datetime import datetime
+import sys
 
 def convert_datetime():
     try:
-        # Read the SKMS table
-        skms = pd.read_csv('01_Data/SKMS.csv')
+        # Load SKMS data
+        skms = pd.read_csv("01_Data/SKMS.csv")
         
         # Convert New_date from EST to UTC
-        est = timezone('US/Eastern')
-        utc = timezone('UTC')
+        est = pytz.timezone('US/Eastern')
+        utc = pytz.utc
         
         skms['New_date'] = pd.to_datetime(skms['New_date'])
-        skms['New_date'] = skms['New_date'].dt.tz_localize(est).dt.tz_convert(utc)
+        skms['New_date'] = skms['New_date'].apply(lambda x: est.localize(x).astimezone(utc))
         
-        # Save the converted dataframe
-        skms.to_csv('SKMS_converted.csv', index=False)
+        # Save intermediate result
+        skms.to_csv("skms_utc.csv", index=False)
         return skms
     
     except Exception as e:
-        print(f"Error in datetime conversion: {str(e)}")
-        return None
+        print(f"Error in convert_datetime: {str(e)}")
+        sys.exit(1)
 
-def join_tables(skms_converted):
+def join_tables(skms_utc):
     try:
-        if skms_converted is None:
-            raise ValueError("No converted SKMS data available")
-            
-        # Read EFR table
-        efr = pd.read_csv('01_Data/EFR.csv')
+        # Load EFR data
+        efr = pd.read_csv("01_Data/EFR.csv")
         
         # Join tables on ticker column
-        merged = pd.merge(skms_converted, efr, on='ticker', how='inner')
+        merged = pd.merge(skms_utc, efr, on='ticker', how='inner')
         
-        # Save the merged dataframe
-        merged.to_csv('SKMS_EFR_merged.csv', index=False)
+        # Save final output
+        merged.to_csv("output.csv", index=False)
         return merged
     
     except Exception as e:
-        print(f"Error in joining tables: {str(e)}")
-        return None
+        print(f"Error in join_tables: {str(e)}")
+        sys.exit(1)
 
-# Execute the steps sequentially
 if __name__ == "__main__":
-    converted_skms = convert_datetime()
-    if converted_skms is not None:
-        join_tables(converted_skms)
+    try:
+        # Step 1: Convert datetime
+        skms_utc = convert_datetime()
+        
+        # Step 2: Join tables
+        final_output = join_tables(skms_utc)
+        
+    except Exception as e:
+        print(f"Error in main execution: {str(e)}")
+        sys.exit(1)

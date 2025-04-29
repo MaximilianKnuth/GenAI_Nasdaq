@@ -20,7 +20,7 @@ from agent_functions import (
 def task_router(state: AgentState) -> dict:
     if state.task_step==1 and state.first_run:
         print("🟢 route to specific task agent")
-    else:
+    elif state.task_step >1:
         print("🟢 route to subsequent task agent")
 
     # Standard routing logic (first pass)
@@ -53,7 +53,7 @@ def router_node_timezone(state: AgentState) -> dict:
             decision = "need_tz"     # Go to timezone extractor with human input context
         elif state.completeness_check_result is False:
             decision = "existence_and_column_type_check"    
-        elif state.task_step!=state.task_length:
+        elif state.task_step<state.task_length:
             decision="subsequent_task_execute"
             state.task_step=state.task_step+1
             state.first_run=True
@@ -70,7 +70,7 @@ def router_node_timezone(state: AgentState) -> dict:
         decision = "need_tz"
     elif state.completeness_check_result is False:
         decision = "existence_and_column_type_check"    
-    elif state.task_step!=state.task_length:
+    elif state.task_step<state.task_length:
         decision="subsequent_task_execute"
         state.task_step=state.task_step+1
         state.first_run=True
@@ -103,7 +103,7 @@ def router_node_join_table(state: AgentState) -> dict:
             decision = "need_table"  # Go to RAG agent with human input context
         elif state.completeness_check_result is False:
             decision = "join_table_check"    
-        elif state.task_step!=state.task_length:
+        elif state.task_step<state.task_length:
             decision="subsequent_task_execute"
             state.task_step=state.task_step+1
             state.first_run=True
@@ -119,7 +119,7 @@ def router_node_join_table(state: AgentState) -> dict:
         decision = "need_table"
     elif state.completeness_check_result is False:
         decision = "join_table_check"    
-    elif state.task_step!=state.task_length:
+    elif state.task_step<state.task_length:
         decision="subsequent_task_execute"
         state.task_step=state.task_step+1
         state.first_run=True
