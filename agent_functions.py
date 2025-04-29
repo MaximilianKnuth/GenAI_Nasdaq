@@ -16,6 +16,7 @@ from state_schema import AgentState
 import zoneinfo
 import json, textwrap
 import logging
+import traceback
 
 # small cache so we don't ask the LLM twice for the same text
 _TZ_CACHE: dict[str, tuple[str | None, str | None]] = {}
@@ -89,35 +90,103 @@ def _ask_llm_for_timezones(
 # Task Classification Agent
 def task_classification_agent(state: AgentState) -> Dict[str, Any]:
     print("task_classification_agent")
-    """Classify the task based on user query"""
+    """Classify the tasks based on user query"""
     client = OpenAI(api_key=state.api_key, base_url="https://api.deepseek.com")
-    
-    # Define the classification prompt
+
+    while True:
+        # Define the multi-task classification prompt
+        prompt = f"""
+        The following are possible task categories:
+        - convert_datetime: When the user wants to convert datetime/timestamps between timezones
+        - join_tables: When the user wants to join two or more tables together
+        - check_distribution: When the user wants to analyze data distribution
+
+        Given the user query: "{state.user_query}"
+
+        Identify ALL relevant tasks mentioned in the query.  
+        Return your answer as a Python list of category names, like this:
+        ["convert_datetime", "join_tables"]
+
+        Do not include anything else other than the Python list.
+        """
+
+        # Call the LLM
+        response = client.chat.completions.create(
+            model="deepseek-chat",
+            messages=[
+                {"role": "system", "content": "You are a helpful assistant."},
+                {"role": "user", "content": prompt},
+            ],
+            temperature=0
+        )
+
+        # Parse LLM output
+        task_list_str = response.choices[0].message.content.strip()
+
+        # Convert string to actual list
+        import ast
+        try:
+            task_list = ast.literal_eval(task_list_str)
+        except Exception as e:
+            print(f"Failed to parse task list: {task_list_str}")
+            raise e
+
+        # Show the detected tasks to the human
+        print(f"Detected the following tasks, we will execute it sequentially: {task_list}. \n Additional Info on what each task do: convert_datetime:\n ➔ Convert datetime or timestamps between different timezones or formats.\n join_tables:\n ➔ Combine two or more tables together based on matching key columns.")
+        confirmation = input("Do you want to proceed with these tasks? (yes/no): ")
+
+        if confirmation.strip().lower() == "yes":
+            # If confirmed, update the state and break the loop
+            return {"task_list": task_list, "task_length": len(task_list),"task_step":1,"user_query": state.user_query}
+        else:
+            # Otherwise, ask the user to input a new query
+            new_query = input("Please enter a more precise query: ")
+            state.user_query = new_query
+            print("Retrying classification with updated query...")
+            return task_classification_agent(state)
+
+def split_query_agent(state: AgentState) -> Dict[str, Any]:
+    print("split query")
+    """Call LLM to generate rewritten queries specific to each task."""
+    client = OpenAI(api_key=state.api_key, base_url="https://api.deepseek.com")
+    rewritten_queries = []
+
     prompt = f"""
-    Classify the following user query into one of these categories:
-    - convert_datetime: When the user wants to convert datetime/timestamps between timezones
-    - join_tables: When the user wants to join two or more tables together
-    - check_distribution: When the user wants to analyze data distribution
-    
-    User query: "{state.user_query}"
-    
-    Return ONLY the category name, nothing else.
+    You are a helpful assistant.
+
+    The user originally asked: "{state.user_query}"
+
+    Now, the task we want to focus on is: "{state.task_list}.\nAdditional Info on what each task do: convert_datetime:\n ➔ Convert datetime or timestamps between different timezones or formats.\n join_tables:\n ➔ Combine two or more tables together based on matching key columns."
+
+    For each task listed above, generate a specific, detailed, rewritten user query focusing ONLY on that task.
+
+    Return your output as a Python list of rewritten queries, one for each task, in the same order.
+    Example output format:
+    ["Rewritten query for task 1", "Rewritten query for task 2", ...]
+
+    DO NOT include any explanation, commentary, or additional text. Only return the Python list.
     """
-    
-    # Call the LLM
+
     response = client.chat.completions.create(
         model="deepseek-chat",
         messages=[
-            {"role": "system", "content": "You are a helpful assistant."},
             {"role": "user", "content": prompt},
         ],
         temperature=0
     )
-    
-    task_type = response.choices[0].message.content.strip()
-    
-    # Update state
-    return {"task_type": task_type}
+
+    rewritten_queries_str = response.choices[0].message.content.strip()
+
+    # Parse the list from string
+    import ast
+    try:
+        rewritten_queries = ast.literal_eval(rewritten_queries_str)
+    except Exception as e:
+        print(f"Failed to parse rewritten queries: {rewritten_queries_str}")
+        raise e
+    print("new queries:", rewritten_queries)
+    return {"task_query":rewritten_queries}
+
 
 # RAG Agent for table and column extraction if not defined - timezone task
 def tz_rag_agent(state: AgentState) -> Dict[str, Any]:
@@ -128,12 +197,13 @@ def tz_rag_agent(state: AgentState) -> Dict[str, Any]:
     try:
         # Instantiate the RAG pipeline
         rag = RAG_retrieval(pdf_folder, state.openai_api_key, state.api_key)
-        
+        current_user_query=state.task_query[state.task_step-1]
+
         # Build enhanced prompt incorporating human input if available
-        combined_query = state.user_query
+        combined_query = current_user_query
         if state.human_response:
             combined_query = f"""
-            Original query: {state.user_query}
+            Original query: {current_user_query}
             User clarification: {state.human_response}{state.historical_response}
             
             Based on both the original query and clarification:
@@ -155,7 +225,7 @@ def tz_rag_agent(state: AgentState) -> Dict[str, Any]:
         parsing_prompt = f"""
         You are a helpful AI assistant to find the corresponding table name and column name based on:
         
-        Original query: {state.user_query}
+        Original query: {current_user_query}
         {"User clarification: " + state.human_response if state.human_response else "" + state.historical_response if state.historical_response else ""}
         
         Based on the returned information from the RAG: {answer}
@@ -198,6 +268,8 @@ def tz_rag_agent(state: AgentState) -> Dict[str, Any]:
 
         # Split the output
         output_text = raw_output.split(", ")
+        output_table_name = output_text[0]
+        output_datetime_column = output_text[1]
         if len(output_text) != 2:
             return {
                 "needs_human_input": True,
@@ -205,6 +277,14 @@ def tz_rag_agent(state: AgentState) -> Dict[str, Any]:
                 "rag_results": answer,
                 "historical_response": (state.historical_response or "") + "\n" + (state.human_response or ""),
                 "human_response": None  # Clear human response since we've used it
+            }
+        elif (state.table_name and state.table_name != output_table_name) or (state.datetime_columns and state.table_name != output_datetime_column):    #rag returns differently than user specified
+            return {
+                "needs_human_input": True,
+                "rag_results": answer,
+                "historical_response": (state.historical_response or "") + "\n" + (state.human_response or ""),
+                "human_response": None,  # Clear human response since we've used it
+                "human_message" : f"I couldn't find the matching column and table. Please make sure you specify the correct table and column. \n Suggestion: {answer}:"
             }
         else:
             table_name = output_text[0]
@@ -241,8 +321,9 @@ def rag_lookup(state: AgentState) -> Dict[str, Any]:
         return updates   # nothing to do
 
     rag = RAG_retrieval(pdf_folder="01_Data/text_data", )
-
-    suggestion = rag.test_pipeline(state.user_query)
+    
+    current_user_query=state.task_query[state.task_step-1]
+    suggestion = rag.test_pipeline(current_user_query)
     # suggestion is expected to be "TABLE, COLUMN" or None
     if suggestion:
         try:
@@ -263,11 +344,12 @@ def timezone_extraction_agent(state: AgentState) -> Dict[str, Any]:
     Enhanced timezone extraction that incorporates human input when available
     """
     updates: Dict[str, Any] = {}
-    combined_query = state.user_query
+    current_user_query=state.task_query[state.task_step-1]
+    combined_query = current_user_query
     
     # Incorporate human input if available
     if state.human_response:
-        combined_query = f"{state.user_query}\nAdditional information: {state.human_response} {state.historical_response}"
+        combined_query = f"{current_user_query}\nAdditional information: {state.human_response} {state.historical_response}"
         # Clear human response as we're using it
         updates["human_response"] = None
     
@@ -375,12 +457,14 @@ def existence_and_column_type_check(state: AgentState) -> Dict[str, Any]: # chec
     
     # Only check column if table is valid
     if state.table_name and state.table_name in state.df_dict:
+        # print("oops")
         df = state.df_dict[state.table_name]
         
         # Check if column exists
         if not state.datetime_columns:
             missing.append("datetime column")
         elif state.datetime_columns not in df.columns:
+            # print("oops")
             invalid.append(f"column '{state.datetime_columns}' not found in table '{state.table_name}'")
             # Clear the invalid column from state
             updates["datetime_columns"] = None
@@ -485,12 +569,15 @@ def generate_smart_suggestions(
     suggestions: Dict[str, Any]
 ) -> str:
     print("generate_smart_suggestions")
-
+    # print(state.rag_results)
     result = ""
     client = OpenAI(api_key=state.api_key, base_url="https://api.deepseek.com")
     pdf_folder = "01_Data/text_data"
 
-    if state.task_type == "convert_datetime":
+    task=state.task_list[state.task_step-1]
+    current_user_query=state.task_query[state.task_step-1]
+    # print(current_user_query)
+    if task == "convert_datetime":
         # --- TABLE SUGGESTIONS ---
         if "table name" in missing or any("table" in err for err in invalid):
             # First use available tables from df_dict
@@ -502,7 +589,7 @@ def generate_smart_suggestions(
                 pdf_folder = "01_Data/text_data"
                 rag = RAG_retrieval(pdf_folder, state.openai_api_key, state.api_key)
                 
-                rag_query = f"What tables would be most relevant for this query: {state.user_query}?"
+                rag_query = f"What tables would be most relevant for this query: {current_user_query}?"
                 table_info = rag.test_pipeline(rag_query)
                 result += f"💡 Suggested tables based on your query: {table_info}\n\n"
             except Exception as e:
@@ -542,7 +629,7 @@ def generate_smart_suggestions(
         if "original timezone" in missing or "target timezone" in missing:
             # Extract timezone info from query using LLM
             prompt = f"""
-            Based on this user query: "{state.user_query}"
+            Based on this user query: "{current_user_query}"
             
             Extract and suggest:
             {' and '.join(['original timezone' if 'original timezone' in missing else '', 
@@ -574,7 +661,7 @@ def generate_smart_suggestions(
                 result += "🌐 Common timezones: UTC, US/Eastern, US/Pacific, Europe/London\n\n"
         
 
-    elif state.task_type == "join_tables":
+    elif task == "join_tables":
         for key in ["table_name1", "table_name2"]:
             if key in missing or any(key.split("_")[1] in err for err in invalid):
                 if suggestions.get(f"{key}_suggestions"):
@@ -590,7 +677,7 @@ def generate_smart_suggestions(
 
         try:
             rag = RAG_retrieval(pdf_folder, state.openai_api_key, state.api_key)
-            rag_output = rag.test_pipeline(f"Suggest compatible table pairs and join keys for this query: {state.user_query}")
+            rag_output = rag.test_pipeline(f"Suggest compatible table pairs and join keys for this query: {current_user_query}")
             result += f"💡 RAG-based suggestion: {rag_output}\\n\\n"
         except Exception as e:
             logging.warning(f"RAG fallback join suggestion error: {str(e)}")
@@ -659,102 +746,201 @@ def code_generation_agent(state: AgentState) -> Dict[str, Any]:
     print("code_generation_agent")
     client = OpenAI(api_key=state.api_key, base_url="https://api.deepseek.com")
 
-    if state.task_type == "convert_datetime":
-        file_path = f"01_Data/{state.table_name}.csv"
-        try:
-            df = pd.read_csv(file_path, nrows=5)
-            sample_data = df.to_markdown(index=False)
-        except Exception as e:
-            sample_data = f"[Error reading {file_path}: {str(e)}]"
+    if state.task_length==1:#check if is single task
+        if state.task_type == "convert_datetime":
+            file_path = f"01_Data/{state.table_name}.csv"
+            try:
+                df = pd.read_csv(file_path, nrows=5)
+                sample_data = df.to_markdown(index=False)
+            except Exception as e:
+                sample_data = f"[Error reading {file_path}: {str(e)}]"
 
-        prompt = f"""
-        You are a Python code generation assistant. The user provided:
+            prompt = f"""
+            You are a Python code generation assistant. The user provided:
 
-        QUERY: "{state.user_query}{state.human_response}{state.historical_response}"
+            QUERY: "{state.user_query}"
 
-        EXECUTION CONTEXT:
-        - Table: {state.table_name}
-        - Datetime columns to convert: {state.datetime_columns}
-        - Original timezone: {state.original_timezone}
-        - Target timezone: {state.target_timezone}
+            EXECUTION CONTEXT:
+            - Table: {state.table_name}
+            - Datetime columns to convert: {state.datetime_columns}
+            - Original timezone: {state.original_timezone}
+            - Target timezone: {state.target_timezone}
 
-        ### Dataset Preview (first 5 rows):
-        {sample_data}
+            ### Dataset Preview (first 5 rows):
+            {sample_data}
 
-        TASK REQUIREMENTS:
-        1. Load the dataset from: '{file_path}'
-        2. Convert the datetime column(s) from {state.original_timezone} to {state.target_timezone}
-        3. Save the transformed data with '_transformed' suffix
-        4. Return ONLY the executable Python code without any Markdown formatting
-        5. Include proper error handling
-        6. Do not use ```python or ``` markers
-        """
-        print(f'''
-        EXECUTION CONTEXT:
-        - Table: {state.table_name}
-        - Datetime columns to convert: {state.datetime_columns}
-        - Original timezone: {state.original_timezone}
-        - Target timezone: {state.target_timezone}
-        ''')
-        
-    elif state.task_type == "join_tables":
-        file_path1 = f"01_Data/{state.table_name1}.csv"
-        file_path2 = f"01_Data/{state.table_name2}.csv"
-        try:
-            df1 = pd.read_csv(file_path1)
-            df2 = pd.read_csv(file_path2)
-            sample_data = (
-                f"Table 1: {state.table_name1}\n"
-                f"{df1.to_markdown(index=False)}\n\n"
-                f"Table 2: {state.table_name2}\n"
-                f"{df2.to_markdown(index=False)}"
-            )
-        except Exception as e:
-            sample_data = f"[Error reading input files: {str(e)}]"
+            TASK REQUIREMENTS:
+            1. Load the dataset from: '{file_path}'
+            2. Convert the datetime column(s) from {state.original_timezone} to {state.target_timezone}
+            3. Save the transformed data with '_transformed' suffix
+            4. Return ONLY the executable Python code without any Markdown formatting
+            5. Include proper error handling
+            6. Do not use ```python or ``` markers
+            """
+            print(f'''
+            EXECUTION CONTEXT:
+            - Table: {state.table_name}
+            - Datetime columns to convert: {state.datetime_columns}
+            - Original timezone: {state.original_timezone}
+            - Target timezone: {state.target_timezone}
+            ''')
+            
+        elif state.task_type == "join_tables":
+            file_path1 = f"01_Data/{state.table_name1}.csv"
+            file_path2 = f"01_Data/{state.table_name2}.csv"
+            try:
+                df1 = pd.read_csv(file_path1)
+                df2 = pd.read_csv(file_path2)
+                sample_data = (
+                    f"Table 1: {state.table_name1}\n"
+                    f"{df1.to_markdown(index=False)}\n\n"
+                    f"Table 2: {state.table_name2}\n"
+                    f"{df2.to_markdown(index=False)}"
+                )
+            except Exception as e:
+                sample_data = f"[Error reading input files: {str(e)}]"
 
-        prompt = f"""
-        You are a Python code generation assistant. The user provided:
+            prompt = f"""
+            You are a Python code generation assistant. The user provided:
 
-        QUERY: "{state.user_query}{state.human_response}{state.historical_response}"
+            QUERY: "{state.user_query}"
 
-        EXECUTION CONTEXT:
-        - Table 1: {state.table_name1}
-        - Join Column for table 1: {state.join_column1}
-        - Table 2: {state.table_name2}
-        - Join Column for table 2: {state.join_column2}
+            EXECUTION CONTEXT:
+            - Table 1: {state.table_name1}
+            - Join Column for table 1: {state.join_column1}
+            - Table 2: {state.table_name2}
+            - Join Column for table 2: {state.join_column2}
 
-        ### Dataset Preview (first 5 rows from each table):
-        {sample_data}
+            ### Dataset Preview (first 5 rows from each table):
+            {sample_data}
 
-        TASK REQUIREMENTS:
-        1. Load both datasets from '{file_path1}' and '{file_path2}'
-        2. Perform an inner join on {state.join_column1} from table 1 and {state.join_column2} from table 2
-        3. Save the result as 'joined_output.csv'
-        4. Return ONLY the executable Python code without any Markdown formatting
-        5. Include proper error handling
-        6. Do not use ```python or ``` markers
-        """
+            TASK REQUIREMENTS:
+            1. Load both datasets from '{file_path1}' and '{file_path2}'
+            2. Perform an inner join on {state.join_column1} from table 1 and {state.join_column2} from table 2
+            3. Save the result as 'joined_output.csv'
+            4. Return ONLY the executable Python code without any Markdown formatting
+            5. Include proper error handling
+            6. Do not use ```python or ``` markers
+            """
 
-        print(f'''
-        EXECUTION CONTEXT:
-        - Table 1: {state.table_name1}
-        - Join Column for table 1: {state.join_column1}
-        - Table 2: {state.table_name2}
-        - Join Column for table 2: {state.join_column2}
-        ''')
-        
+            print(f'''
+            EXECUTION CONTEXT:
+            - Table 1: {state.table_name1}
+            - Join Column for table 1: {state.join_column1}
+            - Table 2: {state.table_name2}
+            - Join Column for table 2: {state.join_column2}
+            ''')
+            
+        else:
+            return {"error": "Unsupported task type for code generation."}
+
+        response = client.chat.completions.create(
+            model="deepseek-coder",
+            messages=[
+                {"role": "system", "content": "You are a helpful Python coding assistant."},
+                {"role": "user", "content": prompt},
+            ],
+            temperature=0
+        )
+
     else:
-        return {"error": "Unsupported task type for code generation."}
+        # Build execution context for all tasks
+        execution_context = []
+        dataset_previews = []
 
-    response = client.chat.completions.create(
-        model="deepseek-coder",
-        messages=[
-            {"role": "system", "content": "You are a helpful Python coding assistant."},
-            {"role": "user", "content": prompt},
-        ],
-        temperature=0
-    )
+        for idx, task in enumerate(state.task_list):
+            task_step = idx + 1
 
+            if task == "convert_datetime":
+                file_path = f"01_Data/{state.table_name}.csv"
+                try:
+                    df = pd.read_csv(file_path, nrows=5)
+                    sample_data = df.to_markdown(index=False)
+                except Exception as e:
+                    sample_data = f"[Error reading {file_path}: {str(e)}]"
+
+                execution_context.append(f"""
+                Step {task_step}: Convert Datetime
+                - Table: {state.table_name}
+                - Datetime columns to convert: {state.datetime_columns}
+                - Original timezone: {state.original_timezone}
+                - Target timezone: {state.target_timezone}
+                """)
+                dataset_previews.append(f"Step {task_step} Dataset Preview:\n{sample_data}")
+
+            elif task == "join_tables":
+                file_path1 = f"01_Data/{state.table_name1}.csv"
+                file_path2 = f"01_Data/{state.table_name2}.csv"
+                try:
+                    df1 = pd.read_csv(file_path1, nrows=5)
+                    df2 = pd.read_csv(file_path2, nrows=5)
+                    sample_data = (
+                        f"Table 1: {state.table_name1}\n"
+                        f"{df1.to_markdown(index=False)}\n\n"
+                        f"Table 2: {state.table_name2}\n"
+                        f"{df2.to_markdown(index=False)}"
+                    )
+                except Exception as e:
+                    sample_data = f"[Error reading input files: {str(e)}]"
+
+                execution_context.append(f"""
+                Step {task_step}: Join Tables
+                - Table 1: {state.table_name1}
+                - Join Column for table 1: {state.join_column1}
+                - Table 2: {state.table_name2}
+                - Join Column for table 2: {state.join_column2}
+                """)
+                dataset_previews.append(f"Step {task_step} Dataset Preview:\n{sample_data}")
+
+            else:
+                return {"error": f"Unsupported task type '{task}' for multi-task generation."}
+
+        # Combine execution context
+        full_execution_context = "\n".join(execution_context)
+        full_dataset_preview = "\n\n".join(dataset_previews)
+
+        # Build the prompt
+        prompt = f"""
+        You are a Python code generation assistant. The user provided:
+
+        QUERY: "{state.user_query}"
+
+        EXECUTION SEQUENCE:
+        {', '.join(state.task_list)}
+
+        EXECUTION CONTEXT:
+        {full_execution_context}
+
+        ### Dataset Previews (first 5 rows from each relevant table):
+        {full_dataset_preview}
+
+        TASK REQUIREMENTS:
+        1. Execute each task sequentially as listed above.
+        2. Make sure the output of each step is properly handled for the next step.
+        3. Load datasets from the specified file paths.
+        4. For datetime conversion, transform columns from {state.original_timezone} to {state.target_timezone}.
+        5. For joining tables, perform an inner join on specified columns.
+        6. Save intermediate results appropriately (e.g., after datetime conversion, save a temp file if needed).
+        7. The final output should be saved with a clear filename (e.g., 'final_output.csv').
+        8. Return ONLY the full executable Python code without any Markdown formatting.
+        9. Include proper error handling at each step.
+        10. Do not use ```python or ``` markers.
+        """
+
+        print("Multi-Task Execution Context:")
+        print(full_execution_context)
+
+        # Call the LLM
+        response = client.chat.completions.create(
+            model="deepseek-coder",
+            messages=[
+                {"role": "system", "content": "You are a helpful Python coding assistant."},
+                {"role": "user", "content": prompt},
+            ],
+            temperature=0
+        )
+
+        
     code = response.choices[0].message.content.strip()
     if code.startswith('```python') and code.endswith('```'):
         code = code[9:-3].strip()
@@ -779,8 +965,10 @@ def process_human_input(state: AgentState) -> Dict[str, Any]:
     
     client = OpenAI(api_key=state.api_key, base_url="https://api.deepseek.com")
 
+    task=state.task_list[state.task_step-1]
+    
     # Task-specific prompt & expected keys
-    if state.task_type == "convert_datetime":
+    if task == "convert_datetime":
         prompt = f"""
         Extract table name, datetime column, original timezone, and target timezone from the user's clarification.
 
@@ -797,7 +985,7 @@ def process_human_input(state: AgentState) -> Dict[str, Any]:
         """
         expected_keys = ["table_name", "datetime_columns", "original_timezone", "target_timezone"]
 
-    elif state.task_type == "join_tables":
+    elif task == "join_tables":
         prompt = f"""
         Extract the two table names and their join columns from the user's clarification.
 
@@ -845,7 +1033,7 @@ def process_human_input(state: AgentState) -> Dict[str, Any]:
 
     suggestions = []
     # Post-processing
-    if state.task_type == "convert_datetime":
+    if task == "convert_datetime":
         if "table_name" in updates and updates["table_name"] not in state.df_dict:
             closest = min(state.df_dict.keys(), key=lambda t: abs(len(t) - len(updates["table_name"])), default=None)
             if closest:
@@ -853,7 +1041,7 @@ def process_human_input(state: AgentState) -> Dict[str, Any]:
                 # Do not auto-correct
                 updates["table_name"] = None
 
-    elif state.task_type == "join_tables":
+    elif task == "join_tables":
         for table_key, col_key in [("table_name1", "join_column1"), ("table_name2", "join_column2")]:
             table = updates.get(table_key)
             column = updates.get(col_key)
@@ -893,9 +1081,72 @@ def process_human_input(state: AgentState) -> Dict[str, Any]:
             "human_message": None,
         })
 
+    #update user and sub-queries
+    result = update_query(state)
+    updates.update({
+            "user_query": result["full_query"],
+            "task_query": result["split_queries"],
+        })
     
     return updates
 
+def update_query(state):
+    """Use LLM to revise the original query based on user feedback for a specific step."""
+    client = OpenAI(api_key=state.api_key, base_url="https://api.deepseek.com")
+
+    task_to_update = state.task_list[state.task_step - 1]  # current task (index correction: step is 1-based)
+
+    prompt = f"""
+    You are a helpful assistant.
+
+    The original user query was:
+    "{state.user_query}"
+
+    The user had multiple tasks to accomplish under this sequence:
+    {', '.join(state.task_list)}
+
+    Now, the user wants to revise the step related to "{task_to_update}" based on the following updated instruction:
+    "{state.human_response}"
+
+    Your tasks are:
+    1. Revise the full original user query to reflect this updated requirement.
+    2. Split the new full query into multiple task-specific queries, one for each task in the same original order.
+
+    Return ONLY a valid Python dictionary with two keys:
+    - "full_query": the revised full user query
+    - "split_queries": a list of new split queries corresponding to each task
+
+    ### Strict Output Format:
+    {{"full_query": "new full query here", "split_queries": ["split query for task 1", "split query for task 2", ...]}}
+
+    Do NOT add any explanation, markdown formatting, or commentary.
+    Only return the dictionary directly.
+    """
+
+    response = client.chat.completions.create(
+        model="deepseek-chat",
+        messages=[
+            {"role": "user", "content": prompt},
+        ],
+        temperature=0
+    )
+
+    reply_text = response.choices[0].message.content.strip()
+
+    # 🛠️ Fix: Remove triple backticks if they exist
+    if reply_text.startswith("```") and reply_text.endswith("```"):
+      reply_text = reply_text.strip("```").strip()
+    if reply_text.startswith("python"):
+      reply_text = reply_text[len("python"):].strip()
+      
+    import ast
+    try:
+        result = ast.literal_eval(reply_text)
+    except Exception as e:
+        print(f"Failed to parse updated query output: {reply_text}")
+        raise e
+
+    return result
 
 # Validation check for Join Table extrations
 def join_table_check(state: AgentState) -> Dict[str, Any]:
@@ -1076,9 +1327,9 @@ def join_table_rag_agent(state: AgentState) -> Dict[str, Any]:
 def llm_first_pass(state: AgentState) -> Dict[str, Any]:
     print("llm_first_pass")
     
-    
+    task=state.task_list[state.task_step-1]
 #if it's convert datetime task
-    if state.task_type == "convert_datetime":
+    if task == "convert_datetime":
         if all(getattr(state, f) for f in (
             "table_name", "datetime_columns", "original_timezone", "target_timezone")):
             return {}
@@ -1115,7 +1366,7 @@ def llm_first_pass(state: AgentState) -> Dict[str, Any]:
 
 
 # if it's join_table task
-    elif state.task_type == "join_tables":
+    elif task == "join_tables":
         if all(getattr(state, f) for f in (
             "table_name1", "join_column1", "table_name2", "join_column2")):
             return {}
@@ -1177,7 +1428,7 @@ def llm_first_pass(state: AgentState) -> Dict[str, Any]:
 
     updates = {}
 
-    if state.task_type == "convert_datetime":
+    if task == "convert_datetime":
         for k in ("original_timezone", "target_timezone"):
             if tz := extracted.get(k):
                 tz_can = _canonical_tz(tz)
@@ -1198,7 +1449,7 @@ def llm_first_pass(state: AgentState) -> Dict[str, Any]:
                 if date_cols:
                     updates["possible_datetime_columns"] = date_cols
 
-    elif state.task_type == "join_tables":
+    elif task == "join_tables":
         for field in ("table_name1", "join_column1", "table_name2", "join_column2"):
             if field in extracted and getattr(state, field) is None:
                 updates[field] = extracted[field]

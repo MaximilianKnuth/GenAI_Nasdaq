@@ -3,6 +3,7 @@ from langgraph.graph import StateGraph
 from state_schema import AgentState
 from agent_functions import (
     task_classification_agent,
+    split_query_agent,
     tz_rag_agent,
     join_table_rag_agent,
     timezone_extraction_agent,
@@ -14,29 +15,34 @@ from agent_functions import (
     llm_first_pass
 )
 
+
+
 def task_router(state: AgentState) -> dict:
-    print("route to specific task agent")
+    if state.task_step==1:
+        print("route to specific task agent")
+    else:
+        print("route to subsequent task agent")
 
     # Standard routing logic (first pass)
-    if state.task_type=="convert_datetime":
+    task=state.task_list[state.task_step-1]
+    if task=="convert_datetime":
         decision = "execute_timezone_subagent"
-    elif state.task_type=="join_tables":
+    elif task=="join_tables":
         decision = "execute_join_table_subagent"
     else:
         decision = "done"
     return {"routing_decision": decision}
 
-
 def router_node_timezone(state: AgentState) -> dict:
     if state.first_run:
         print("tz_router_node")
-    else:
-        print("reroute based on updated requirement for convert timezone")
+
     """
     Enhanced router that makes intelligent decisions after human input
     """
     # First check if human input is needed
     if state.needs_human_input:
+        print("yes")
         return {"routing_decision": "ask_human"}
     
     # After human input was processed, route based on what's still missing
@@ -48,10 +54,15 @@ def router_node_timezone(state: AgentState) -> dict:
             decision = "need_tz"     # Go to timezone extractor with human input context
         elif state.completeness_check_result is False:
             decision = "existence_and_column_type_check"    
+        elif state.task_step!=state.task_length:
+            decision="subsequent_task_execute"
+            state.task_step=state.task_step+1
+            state.first_run=True
+            state.completeness_check_result=False
         else: #Go to validation
             decision = "done"
             
-        return {"routing_decision": decision}
+        return {"routing_decision": decision,"task_step": state.task_step,"first_run": state.first_run,"completeness_check_result":state.completeness_check_result}
     
     # Standard routing logic (first pass)
     if not (state.table_name and state.datetime_columns):
@@ -60,16 +71,20 @@ def router_node_timezone(state: AgentState) -> dict:
         decision = "need_tz"
     elif state.completeness_check_result is False:
         decision = "existence_and_column_type_check"    
+    elif state.task_step!=state.task_length:
+        decision="subsequent_task_execute"
+        state.task_step=state.task_step+1
+        state.first_run=True
+        state.completeness_check_result=False
     else:
         decision = "done"
     
-    return {"routing_decision": decision}
+    return {"routing_decision": decision,"task_step": state.task_step,"first_run": state.first_run,"completeness_check_result":state.completeness_check_result}
 
 def router_node_join_table(state: AgentState) -> dict:
     if state.first_run:
         print("jt_router_node")
-    else:
-        print("reroute based on updated requirement for join tables")
+
     """
     Enhanced router that makes intelligent decisions after human input
     """
@@ -89,20 +104,32 @@ def router_node_join_table(state: AgentState) -> dict:
             decision = "need_table"  # Go to RAG agent with human input context
         elif state.completeness_check_result is False:
             decision = "join_table_check"    
+        elif state.task_step!=state.task_length:
+            decision="subsequent_task_execute"
+            state.task_step=state.task_step+1
+            state.first_run=True
+            state.completeness_check_result=False
         else: #Go to validation
             decision = "done"
             
-        return {"routing_decision": decision}
+        return {"routing_decision": decision,"task_step": state.task_step,"first_run": state.first_run,"completeness_check_result":state.completeness_check_result}
+    
     
     # Standard routing logic (first pass)
     if not (state.table_name1 and state.join_column1 and state.table_name2 and state.join_column2):
         decision = "need_table"
     elif state.completeness_check_result is False:
         decision = "join_table_check"    
+    elif state.task_step!=state.task_length:
+        decision="subsequent_task_execute"
+        state.task_step=state.task_step+1
+        state.first_run=True
+        state.completeness_check_result=False
     else:
         decision = "done"
     
-    return {"routing_decision": decision}
+    return {"routing_decision": decision,"task_step": state.task_step,"first_run": state.first_run,"completeness_check_result":state.completeness_check_result}
+
 
     # Add a new routing function that simply returns the stored decision
 
@@ -127,6 +154,7 @@ def create_agent_workflow():
     g.add_node("first_run_router", first_run_router)
     g.add_node("llm_first_pass", llm_first_pass)
     g.add_node("task_classification", task_classification_agent)
+    g.add_node("split_query_agent",split_query_agent)
     g.add_node("task_router", task_router)
     g.add_node("router_timezone", router_node_timezone)
     g.add_node("router_join_table", router_node_join_table)
@@ -146,7 +174,7 @@ def create_agent_workflow():
     g.set_entry_point("first_run_router")
     
     # — normal edges —
-    g.add_edge("task_classification", "llm_first_pass")
+    g.add_edge("split_query_agent","llm_first_pass")
     g.add_edge("llm_first_pass","task_router")
     g.add_edge("human_input", "task_router") 
     # g.add_edge("validation", "code_generation")
@@ -160,6 +188,17 @@ def create_agent_workflow():
     # - jt extraction edges - 
     g.add_edge("join_table_rag_lookup", "join_table_check")
     g.add_edge("join_table_check", "router_join_table")
+    
+    
+    g.add_conditional_edges(
+        "task_classification",
+        lambda state: "write separate queries" if len(state.task_list) > 1 else "pass",
+        {
+            "write separate queries": "split_query_agent",
+            "pass": "llm_first_pass"
+        }
+    )
+
     
     g.add_conditional_edges(
     "first_run_router",
@@ -179,7 +218,7 @@ def create_agent_workflow():
         "execute_timezone_subagent": "router_timezone",
         "execute_join_table_subagent": "router_join_table"
     }
-) 
+    ) 
     
     # timezone-Router conditional edges
     g.add_conditional_edges(
@@ -190,6 +229,7 @@ def create_agent_workflow():
             "need_tz": "tz_extractor",
             "ask_human": "human_input",
             "existence_and_column_type_check": "existence_and_column_type_check",
+            "subsequent_task_execute": "llm_first_pass",
             "done": "code_generation",
         },
     )
@@ -202,6 +242,7 @@ def create_agent_workflow():
             "need_table": "join_table_rag_lookup",
             "ask_human": "human_input",
             "join_table_check": "join_table_check",
+            "subsequent_task_execute": "llm_first_pass",
             "done": "code_generation",
         },
     )

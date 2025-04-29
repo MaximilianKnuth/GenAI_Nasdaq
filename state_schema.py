@@ -8,7 +8,10 @@ class AgentState(BaseModel):
     user_query: str = Field(description="The original user query")
     
     # Task classification fields
-    task_type: Optional[str] = Field(None, description="The classified task type (convert_datetime, join_tables, etc.)")
+    task_list: Optional[List[str]] = Field(default_factory=list, description="The classified list of task types (e.g., ['convert_datetime', 'join_tables'])")
+    task_length: Optional[int] = Field(None, description="How many tasks we will execute.)")
+    task_step: Optional[int] = Field(None, description="Which step of task we're in.)")
+    task_query: Optional[List[str]] = Field(default_factory=list, description="New task-specific query")
     
     # Next step
     routing_decision: Optional[str] = Field(None, description="Decision made by the router node")

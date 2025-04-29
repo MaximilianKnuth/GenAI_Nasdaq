@@ -8,6 +8,7 @@ graph TD;
 	first_run_router(first_run_router)
 	llm_first_pass(llm_first_pass)
 	task_classification(task_classification)
+	split_query_agent(split_query_agent)
 	task_router(task_router)
 	router_timezone(router_timezone)
 	router_join_table(router_join_table)
@@ -26,9 +27,11 @@ graph TD;
 	join_table_check --> router_join_table;
 	join_table_rag_lookup --> join_table_check;
 	llm_first_pass --> task_router;
-	task_classification --> llm_first_pass;
+	split_query_agent --> llm_first_pass;
 	tz_extractor --> existence_and_column_type_check;
 	tz_rag_lookup --> existence_and_column_type_check;
+	task_classification -. &nbsp;write separate queries&nbsp; .-> split_query_agent;
+	task_classification -. &nbsp;pass&nbsp; .-> llm_first_pass;
 	first_run_router -. &nbsp;first_run&nbsp; .-> task_classification;
 	first_run_router -. &nbsp;human_input_needed&nbsp; .-> human_input;
 	first_run_router -. &nbsp;subsequent_run&nbsp; .-> task_router;
@@ -38,10 +41,12 @@ graph TD;
 	router_timezone -. &nbsp;need_tz&nbsp; .-> tz_extractor;
 	router_timezone -. &nbsp;ask_human&nbsp; .-> human_input;
 	router_timezone -.-> existence_and_column_type_check;
+	router_timezone -. &nbsp;subsequent_task_execute&nbsp; .-> llm_first_pass;
 	router_timezone -. &nbsp;done&nbsp; .-> code_generation;
 	router_join_table -. &nbsp;need_table&nbsp; .-> join_table_rag_lookup;
 	router_join_table -. &nbsp;ask_human&nbsp; .-> human_input;
 	router_join_table -.-> join_table_check;
+	router_join_table -. &nbsp;subsequent_task_execute&nbsp; .-> llm_first_pass;
 	router_join_table -. &nbsp;done&nbsp; .-> code_generation;
 	classDef default fill:#f2f0ff,line-height:1.2
 	classDef first fill-opacity:0
