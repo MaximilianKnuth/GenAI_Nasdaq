@@ -18,6 +18,7 @@ import json, textwrap
 import logging
 import subprocess
 import sys
+from typing import Dict, Any
 
 
 # small cache so we don't ask the LLM twice for the same text
@@ -745,13 +746,15 @@ def validation_agent(state: AgentState) -> Dict[str, Any]:
         }
 
 
+
+
+
 def code_generation_agent(state: AgentState) -> Dict[str, Any]:
-    """Generate Python code based on task type, attempt to run it, and auto-fix errors."""
+    """Generate Python code based on task type, attempt to run it, and auto-fix errors or send failure report to LLM."""
     print("code_generation_agent")
     client = OpenAI(api_key=state.api_key, base_url="https://api.deepseek.com")
 
     def call_deepseek_with_prompt(prompt):
-        """Helper to call deepseek-coder with a given prompt."""
         response = client.chat.completions.create(
             model="deepseek-coder",
             messages=[
@@ -761,27 +764,25 @@ def code_generation_agent(state: AgentState) -> Dict[str, Any]:
             temperature=0
         )
         code = response.choices[0].message.content.strip()
-        # Step 1: Clean any ```python wrapping
         if code.startswith('```python') and code.endswith('```'):
             code = code[9:-3].strip()
         elif code.startswith('```') and code.endswith('```'):
             code = code[3:-3].strip()
-        
-        # Step 2: Remove any "Here is the code:" or similar intro
+
         lines = code.splitlines()
         code_lines = []
         start_collecting = False
         for line in lines:
-            if not start_collecting and ("import " in line or "def " in line or "=" in line or "for " in line or "if " in line):
+            if not start_collecting and any(kw in line for kw in ("import ", "def ", "=", "for ", "if ")):
                 start_collecting = True
             if start_collecting:
                 code_lines.append(line)
 
         return "\n".join(code_lines).strip()
 
-    # ---- Build prompt based on task ----
+    # Prompt building logic
     if state.task_length == 1:
-        task=state.task_list[state.task_step-1]
+        task = state.task_list[state.task_step - 1]
         if task == "convert_datetime":
             file_path = f"01_Data/{state.table_name}.csv"
             try:
@@ -812,7 +813,6 @@ def code_generation_agent(state: AgentState) -> Dict[str, Any]:
             5. Return ONLY the executable Python code without any Markdown formatting.
             6. Do not use ```python or ``` markers.
             """
-
         elif task == "join_tables":
             file_path1 = f"01_Data/{state.table_name1}.csv"
             file_path2 = f"01_Data/{state.table_name2}.csv"
@@ -852,15 +852,11 @@ def code_generation_agent(state: AgentState) -> Dict[str, Any]:
             5. Return ONLY the executable Python code without any Markdown formatting.
             6. Do not use ```python or ``` markers.
             """
-
         else:
             return {"error": "Unsupported single task type for code generation."}
-
     else:
-        # Build execution context for multi-tasks
         execution_context = []
         dataset_previews = []
-
         for idx, task in enumerate(state.task_list):
             task_step = idx + 1
             if task == "convert_datetime":
@@ -878,7 +874,6 @@ def code_generation_agent(state: AgentState) -> Dict[str, Any]:
                 - Target timezone: {state.target_timezone}
                 """)
                 dataset_previews.append(f"Step {task_step} Dataset Preview:\n{sample_data}")
-
             elif task == "join_tables":
                 file_path1 = f"01_Data/{state.table_name1}.csv"
                 file_path2 = f"01_Data/{state.table_name2}.csv"
@@ -901,12 +896,8 @@ def code_generation_agent(state: AgentState) -> Dict[str, Any]:
                 - Join Column for table 2: {state.join_column2}
                 """)
                 dataset_previews.append(f"Step {task_step} Dataset Preview:\n{sample_data}")
-
             else:
                 return {"error": f"Unsupported multi-task type '{task}' for code generation."}
-
-        full_execution_context = "\n".join(execution_context)
-        full_dataset_preview = "\n\n".join(dataset_previews)
 
         prompt = f"""
         You are a Python code generation assistant. The user provided:
@@ -917,11 +908,11 @@ def code_generation_agent(state: AgentState) -> Dict[str, Any]:
         {', '.join(state.task_list)}
 
         EXECUTION CONTEXT:
-        {full_execution_context}
+        {"".join(execution_context)}
 
         ### Dataset Previews:
-        {full_dataset_preview}
-            
+        {"".join(dataset_previews)}
+
         TASK REQUIREMENTS:
         1. Execute each task sequentially.
         2. Ensure output of each step is used correctly in the next step.
@@ -934,10 +925,8 @@ def code_generation_agent(state: AgentState) -> Dict[str, Any]:
         9. Save final output file in "output.csv"
         """
 
-    # ---- Now actually call deepseek and run/fix code ----
+    # === Call deepseek, try running, retry if needed ===
     generated_code = call_deepseek_with_prompt(prompt)
-
-    
     attempt = 0
     max_attempts = 3
 
@@ -946,35 +935,58 @@ def code_generation_agent(state: AgentState) -> Dict[str, Any]:
             f.write(generated_code)
 
         try:
-            # Use subprocess to safely run
             subprocess.run([sys.executable, "generated_code.py"], check=True)
-            print(f"Code ran successfully on attempt {attempt + 1}")
+            print(f"✅ Code ran successfully on attempt {attempt + 1}")
+
+            used_fields = {
+                "final_user_query": state.user_query,
+                "sequential_executed_task": state.task_list,
+                "transform_timezone_table_name": getattr(state, 'table_name', None),
+                "transform_timezone_column_name": getattr(state, 'datetime_columns', None),
+                "original_timezone": getattr(state, 'original_timezone', None),
+                "target_timezone": getattr(state, 'target_timezone', None),
+                "join_table1_name": getattr(state, 'table_name1', None),
+                "join_table2_name": getattr(state, 'table_name2', None),
+                "join_column_table1": getattr(state, 'join_column1', None),
+                "join_column_table2": getattr(state, 'join_column2', None)
+            }
+            print("✅ Summary of used fields:")
+            for k, v in used_fields.items():
+                if v is not None:
+                    print(f"  {k}: {v}")
+
             return {"generated_code": generated_code}
-        
+
         except subprocess.CalledProcessError as e:
-            print(f"Error on attempt {attempt + 1}: {e}")
+            print(f"❌ Error on attempt {attempt + 1}: {e}")
             attempt += 1
 
             if attempt == max_attempts:
-                return {"error": "Cannot generate working code after 3 attempts."}
+                recovery_prompt = f"""
+                You generated the following code based on this query:
 
-            fix_prompt = f"""
-            You generated the following code, but it caused an execution error:
+                "{state.user_query}"
 
-            Original Query: "{state.user_query}"
+                But it failed to execute even after 3 attempts. Here is the code and the final error:
 
-            Current Code:
-            {generated_code}
+                --- CODE START ---
+                {generated_code}
+                --- CODE END ---
 
-            Error Message:
-            {str(e)}
+                --- ERROR ---
+                {str(e)}
+                --- END ERROR ---
 
-            ### TASK:
-            - Please fix the code based on the error message above.
-            - Return ONLY the corrected executable Python code without Markdown formatting or explanation.
-            - No ```python markers. Handle errors carefully.
-            """
-    generated_code = call_deepseek_with_prompt(fix_prompt)
+                Please return an updated and corrected version of the full executable Python code, with proper error handling.
+                Do NOT include any markdown or explanation. Only pure executable code.
+                """
+                fixed_code = call_deepseek_with_prompt(recovery_prompt)
+                return {
+                    "generated_code": fixed_code,
+                    "error": str(e),
+                    "message": "Returned LLM-updated code after repeated failure"
+                }
+
             
 # Human Input Handler, update field based on human input, if input is invalid, find closest and ask for confirmation
 def process_human_input(state: AgentState) -> Dict[str, Any]:
