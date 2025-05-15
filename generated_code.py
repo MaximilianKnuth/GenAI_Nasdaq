@@ -1,20 +1,23 @@
 import pandas as pd
+import pytz
+from datetime import datetime
 import sys
 
 try:
-    # Load datasets
-    efr = pd.read_csv('01_Data/EFR.csv')
-    eqr = pd.read_csv('01_Data/EQR.csv')
+    # Load the dataset
+    df = pd.read_csv('01_Data/SKMS.csv')
     
-    # Perform inner join on 'ticker'
-    joined_df = pd.merge(efr, eqr, on='ticker', how='inner')
+    # Convert New_date from EST to UTC
+    eastern = pytz.timezone('US/Eastern')
+    df['New_date'] = pd.to_datetime(df['New_date'])
+    df['New_date'] = df['New_date'].apply(lambda x: eastern.localize(x).astimezone(pytz.utc))
     
-    # Save the result
-    joined_df.to_csv('joined_output.csv', index=False)
+    # Save transformed dataset
+    df.to_csv('SKMS_transformed.csv', index=False)
     
-except FileNotFoundError as e:
-    print(f"Error: {e}")
+except FileNotFoundError:
+    print("Error: File '01_Data/SKMS.csv' not found.")
     sys.exit(1)
 except Exception as e:
-    print(f"Error: {e}")
+    print(f"Error: {str(e)}")
     sys.exit(1)

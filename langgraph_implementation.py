@@ -18,10 +18,10 @@ from agent_functions import (
 
 
 def task_router(state: AgentState) -> dict:
-    if state.task_step==1 and state.first_run:
-        print("🟢 route to specific task agent")
-    elif state.task_step >1:
-        print("🟢 route to subsequent task agent")
+    #if state.task_step==1 and state.first_run:
+        #print("🟢 route to specific task agent")
+    #elif state.task_step >1:
+        #print("🟢 route to subsequent task agent")
 
     # Standard routing logic (first pass)
     task=state.task_list[state.task_step-1]
@@ -34,8 +34,8 @@ def task_router(state: AgentState) -> dict:
     return {"routing_decision": decision}
 
 def router_node_timezone(state: AgentState) -> dict:
-    if state.first_run and state.first_run:
-        print("🟢 tz_router_node")
+    #if state.first_run and state.first_run:
+        #print("🟢 tz_router_node")
 
     """
     Enhanced router that makes intelligent decisions after human input
@@ -81,8 +81,8 @@ def router_node_timezone(state: AgentState) -> dict:
     return {"routing_decision": decision,"task_step": state.task_step,"first_run": state.first_run,"completeness_check_result":state.completeness_check_result}
 
 def router_node_join_table(state: AgentState) -> dict:
-    if state.first_run and state.first_run:
-        print("🟢 jt_router_node")
+    #if state.first_run and state.first_run:
+        #print("🟢 jt_router_node")
 
     """
     Enhanced router that makes intelligent decisions after human input
@@ -137,7 +137,7 @@ def route_by_decision(state: AgentState) -> str:
 
 # Define a function to route based on whether this is the first run
 def first_run_router(state: AgentState) -> dict:
-    print("first_run_router")
+    #print("first_run_router")
     """Router that determines the initial processing path"""
     if state.first_run:
         return {"routing_decision": "first_run"}

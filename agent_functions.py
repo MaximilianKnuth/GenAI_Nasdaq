@@ -19,13 +19,17 @@ import logging
 import subprocess
 import sys
 from typing import Dict, Any
+import asyncio
+import websockets
 
+# Configure logging to output to the console
+logging.basicConfig(level=logging.INFO)
 
 # small cache so we don't ask the LLM twice for the same text
 _TZ_CACHE: dict[str, tuple[str | None, str | None]] = {}
 
 def _canonical_tz(name: str) -> str | None:
-    print(f"Canonicalizing timezone: {name}")
+    print(f"Function '_canonical_tz' called with argument: {name}")
     """
     Return a valid IANA tz string or None.
     Accepts aliases like EST, EDT, PST, CET, etc.
@@ -53,6 +57,7 @@ def _canonical_tz(name: str) -> str | None:
 def _ask_llm_for_timezones(
     user_query: str, client: OpenAI
 ) -> tuple[str | None, str | None]:
+    print(f"Function '_ask_llm_for_timezones' called with argument: {user_query}")
     """
     Use DeepSeek / GPT to extract *two* IANA time‑zones from free text.
     Returns (orig_tz, target_tz) or (None, None) if uncertain.
@@ -92,10 +97,16 @@ def _ask_llm_for_timezones(
 
 # Task Classification Agent
 def task_classification_agent(state: AgentState) -> Dict[str, Any]:
-    print("task_classification_agent")
+    print("Function 'task_classification_agent' called")
     """Classify the tasks based on user query"""
     client = OpenAI(api_key=state.api_key, base_url="https://api.deepseek.com")
-
+    # Send message to WebSocket
+    async def send_message(message_type, content):
+        # This would need to be integrated with your WebSocket manager
+        await websocket.send_json({
+            "type": message_type,
+            "content": content
+        })
     while True:
         # Define the multi-task classification prompt
         prompt = f"""
@@ -136,6 +147,7 @@ def task_classification_agent(state: AgentState) -> Dict[str, Any]:
 
         # Show the detected tasks to the human
         print(f"Detected the following tasks, we will execute it sequentially: {task_list}. \n Additional Info on what each task do: convert_datetime:\n ➔ Convert datetime or timestamps between different timezones or formats.\n join_tables:\n ➔ Combine two or more tables together based on matching key columns.")
+        send_message("task_detection", f"Detected the following tasks, we will execute it sequentially: {task_list}. \n Additional Info on what each task do: convert_datetime:\n ➔ Convert datetime or timestamps between different timezones or formats.\n join_tables:\n ➔ Combine two or more tables together based on matching key columns.")
         confirmation = input("Do you want to proceed with these tasks? (yes/no): ")
 
         if confirmation.strip().lower() == "yes":
@@ -151,7 +163,7 @@ def task_classification_agent(state: AgentState) -> Dict[str, Any]:
             return task_classification_agent(state)
 
 def split_query_agent(state: AgentState) -> Dict[str, Any]:
-    print("split query")
+    print("Function 'split_query_agent' called")
     """Call LLM to generate rewritten queries specific to each task."""
     client = OpenAI(api_key=state.api_key, base_url="https://api.deepseek.com")
     rewritten_queries = []
@@ -195,7 +207,7 @@ def split_query_agent(state: AgentState) -> Dict[str, Any]:
 
 # RAG Agent for table and column extraction if not defined - timezone task
 def tz_rag_agent(state: AgentState) -> Dict[str, Any]:
-    print("rag_agent")
+    print("Function 'tz_rag_agent' called")
     """Enhanced RAG agent that incorporates human input when available"""
     pdf_folder = "01_Data/text_data"
     
@@ -312,7 +324,7 @@ def tz_rag_agent(state: AgentState) -> Dict[str, Any]:
         }
 
 def rag_lookup(state: AgentState) -> Dict[str, Any]:
-    print("rag_lookup")
+    print("Function 'rag_lookup' called")
     """
     Fill table_name & datetime_column only if they are missing.
     """
@@ -344,7 +356,7 @@ def rag_lookup(state: AgentState) -> Dict[str, Any]:
 
 # Timezone Extraction Agent
 def timezone_extraction_agent(state: AgentState) -> Dict[str, Any]:
-    print("timezone_extraction_agent")
+    print("Function 'timezone_extraction_agent' called")
     """
     Enhanced timezone extraction that incorporates human input when available
     """
@@ -437,7 +449,7 @@ def timezone_extraction_agent(state: AgentState) -> Dict[str, Any]:
     return updates
 
 def existence_and_column_type_check(state: AgentState) -> Dict[str, Any]: # check if received or stored data is of the right type
-    print("existence_and_column_type_check")
+    print("Function 'existence_and_column_type_check' called")
     """
     Enhanced completeness check that validates:
     1. Table exists in df_dict
@@ -573,7 +585,7 @@ def generate_smart_suggestions(
     invalid: List[str],
     suggestions: Dict[str, Any]
 ) -> str:
-    print("generate_smart_suggestions")
+    print("Function 'generate_smart_suggestions' called")
     # print(state.rag_results)
     result = ""
     client = OpenAI(api_key=state.api_key, base_url="https://api.deepseek.com")
@@ -690,7 +702,7 @@ def generate_smart_suggestions(
     return result
 
 def next_step(state: AgentState) -> str:
-    print("next_step")
+    print("Function 'next_step' called")
     """
     Return one of: need_table, need_tz, ask_human, done
     """
@@ -704,7 +716,7 @@ def next_step(state: AgentState) -> str:
 
 # Validation Agent - useless currently
 def validation_agent(state: AgentState) -> Dict[str, Any]:
-    print("validation_agent")
+    print("Function 'validation_agent' called")
     """Validate the data and create execution summary"""
     try:
         # Get the dataframe
@@ -750,8 +762,9 @@ def validation_agent(state: AgentState) -> Dict[str, Any]:
 
 
 def code_generation_agent(state: AgentState) -> Dict[str, Any]:
+    print("Function 'code_generation_agent' called")
     """Generate Python code based on task type, attempt to run it, and auto-fix errors or send failure report to LLM."""
-    print("code_generation_agent")
+    #print("code_generation_agent")
     client = OpenAI(api_key=state.api_key, base_url="https://api.deepseek.com")
 
     def call_deepseek_with_prompt(prompt):
@@ -990,7 +1003,7 @@ def code_generation_agent(state: AgentState) -> Dict[str, Any]:
             
 # Human Input Handler, update field based on human input, if input is invalid, find closest and ask for confirmation
 def process_human_input(state: AgentState) -> Dict[str, Any]:
-    print("process_human_input")
+    print("Function 'process_human_input' called")
 
     reply = (state.human_response or "").strip()
     if not reply:
@@ -1127,6 +1140,7 @@ def process_human_input(state: AgentState) -> Dict[str, Any]:
     return updates
 
 def update_query(state):
+    print("Function 'update_query' called")
     """Use LLM to revise the original query based on user feedback for a specific step."""
     client = OpenAI(api_key=state.api_key, base_url="https://api.deepseek.com")
 
@@ -1186,7 +1200,7 @@ def update_query(state):
 
 # Validation check for Join Table extrations
 def join_table_check(state: AgentState) -> Dict[str, Any]:
-    print("join_table_check")
+    print("Function 'join_table_check' called")
 
     missing = []
     invalid = []
@@ -1270,7 +1284,7 @@ def join_table_check(state: AgentState) -> Dict[str, Any]:
 
 # RAG Agent for table and column extraction if not defined - timezone
 def join_table_rag_agent(state: AgentState) -> Dict[str, Any]:
-    print("join_table_rag")
+    print("Function 'join_table_rag_agent' called")
 
     pdf_folder = "01_Data/text_data"
 
@@ -1361,7 +1375,7 @@ def join_table_rag_agent(state: AgentState) -> Dict[str, Any]:
         }
 
 def llm_first_pass(state: AgentState) -> Dict[str, Any]:
-    print("llm_first_pass")
+    print("Function 'llm_first_pass' called")
     
     task=state.task_list[state.task_step-1]
 #if it's convert datetime task

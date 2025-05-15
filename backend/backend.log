@@ -1,0 +1,118 @@
+2025-05-08 00:36:38,044 - __main__ - INFO - Starting server on port 9000
+2025-05-08 00:37:01,226 - __main__ - INFO - Client connected. Total connections: 1
+2025-05-08 00:37:01,227 - __main__ - ERROR - Error sending message: no close frame received or sent
+2025-05-08 00:37:01,227 - __main__ - INFO - Client disconnected. Remaining connections: 0
+2025-05-08 00:37:03,230 - __main__ - INFO - Client connected. Total connections: 1
+2025-05-08 00:52:25,934 - DataProcessingApp - INFO - 🚀  Logging initialised – console + logs/app.log
+2025-05-08 00:52:25,934 - __main__ - INFO - Successfully imported DataProcessingApp from main.py
+2025-05-08 00:52:25,934 - __main__ - INFO - Starting server on port 9000
+2025-05-08 00:52:54,614 - __main__ - ERROR - Error during WebSocket connection: [Errno 2] No such file or directory: '01_Data/EFR.csv'
+2025-05-08 00:52:54,616 - __main__ - INFO - Client disconnected: 127.0.0.1:62256. Remaining connections: 0
+2025-05-08 00:52:56,627 - __main__ - ERROR - Error during WebSocket connection: [Errno 2] No such file or directory: '01_Data/EFR.csv'
+2025-05-08 00:53:16,204 - __main__ - INFO - Starting query processing for 127.0.0.1:62259: "Please join EFR and EQR based on ticker"
+2025-05-08 00:53:16,204 - __main__ - ERROR - Error processing query for 127.0.0.1:62259: 'module' object is not subscriptable
+2025-05-08 00:53:16,206 - __main__ - ERROR - Traceback (most recent call last):
+  File "/Users/maxknuth/GenAI_Nasdaq/backend/main.py", line 139, in process_query_thread
+    original_input = __builtins__['input']
+TypeError: 'module' object is not subscriptable
+
+2025-05-08 00:58:02,422 - __main__ - INFO - Client disconnected: 127.0.0.1:62259. Remaining connections: 0
+2025-05-08 00:58:06,336 - DataProcessingApp - INFO - 🚀  Logging initialised – console + logs/app.log
+2025-05-08 00:58:06,336 - __main__ - INFO - Successfully imported DataProcessingApp from main.py
+2025-05-08 00:58:06,337 - __main__ - INFO - Starting server on port 9000
+2025-05-08 00:58:08,539 - __main__ - ERROR - Error during WebSocket connection: [Errno 2] No such file or directory: '01_Data/EFR.csv'
+2025-05-08 00:58:08,610 - __main__ - INFO - Client disconnected: 127.0.0.1:62390. Remaining connections: 0
+2025-05-08 00:58:08,862 - __main__ - ERROR - Error during WebSocket connection: [Errno 2] No such file or directory: '01_Data/EFR.csv'
+2025-05-08 00:58:08,863 - __main__ - INFO - Client disconnected: 127.0.0.1:62397. Remaining connections: 0
+2025-05-08 00:58:10,870 - __main__ - ERROR - Error during WebSocket connection: [Errno 2] No such file or directory: '01_Data/EFR.csv'
+2025-05-08 00:58:55,807 - __main__ - INFO - Client disconnected: 127.0.0.1:62398. Remaining connections: 0
+2025-05-08 00:58:59,736 - DataProcessingApp - INFO - 🚀  Logging initialised – console + logs/app.log
+2025-05-08 00:58:59,736 - __main__ - INFO - Successfully imported DataProcessingApp from main.py
+2025-05-08 00:58:59,736 - __main__ - INFO - Starting server on port 9000
+2025-05-08 00:59:01,917 - __main__ - ERROR - Error during WebSocket connection: [Errno 2] No such file or directory: '01_Data/EFR.csv'
+2025-05-08 00:59:01,989 - __main__ - INFO - Client disconnected: 127.0.0.1:62423. Remaining connections: 0
+2025-05-08 00:59:02,239 - __main__ - ERROR - Error during WebSocket connection: [Errno 2] No such file or directory: '01_Data/EFR.csv'
+2025-05-08 00:59:02,240 - __main__ - INFO - Client disconnected: 127.0.0.1:62430. Remaining connections: 0
+2025-05-08 00:59:04,247 - __main__ - ERROR - Error during WebSocket connection: [Errno 2] No such file or directory: '01_Data/EFR.csv'
+2025-05-08 01:01:30,391 - DataProcessingApp - INFO - 🚀  Logging initialised – console + logs/app.log
+2025-05-08 01:01:30,392 - __main__ - INFO - Successfully imported DataProcessingApp from main.py
+2025-05-08 01:01:30,392 - __main__ - INFO - Starting server on port 9000
+2025-05-08 01:01:31,352 - __main__ - ERROR - Error during WebSocket connection: [Errno 2] No such file or directory: '01_Data/EFR.csv'
+2025-05-08 01:01:57,138 - __main__ - ERROR - Error during WebSocket connection: [Errno 2] No such file or directory: '01_Data/EFR.csv'
+2025-05-08 01:01:57,139 - __main__ - INFO - Client disconnected: 127.0.0.1:62648. Remaining connections: 1
+2025-05-08 01:01:57,142 - __main__ - INFO - Client disconnected: 127.0.0.1:62634. Remaining connections: 0
+2025-05-08 01:01:59,152 - __main__ - ERROR - Error during WebSocket connection: [Errno 2] No such file or directory: '01_Data/EFR.csv'
+2025-05-08 01:02:08,380 - __main__ - INFO - Starting query processing for 127.0.0.1:62650: Please join EFR and EQR based on ticker
+2025-05-08 01:02:08,380 - __main__ - ERROR - Error processing query for 127.0.0.1:62650: '127.0.0.1:62650'
+2025-05-08 01:02:08,383 - __main__ - ERROR - Traceback (most recent call last):
+  File "/Users/maxknuth/GenAI_Nasdaq/backend/main.py", line 160, in process_query_thread
+    self.app_instances[client_id].process_query(query)
+KeyError: '127.0.0.1:62650'
+
+2025-05-08 01:02:17,028 - DataProcessingApp - INFO - 🚀  Logging initialised – console + logs/app.log
+2025-05-08 01:02:17,028 - __main__ - INFO - Successfully imported DataProcessingApp from main.py
+2025-05-08 01:02:17,028 - __main__ - INFO - Starting server on port 9000
+2025-05-08 01:02:25,197 - __main__ - ERROR - Error during WebSocket connection: [Errno 2] No such file or directory: '01_Data/EFR.csv'
+2025-05-08 01:02:25,197 - __main__ - INFO - Client disconnected: 127.0.0.1:62661. Remaining connections: 1
+2025-05-08 01:02:25,430 - __main__ - ERROR - Error during WebSocket connection: [Errno 2] No such file or directory: '01_Data/EFR.csv'
+2025-05-08 01:02:25,432 - __main__ - INFO - Client disconnected: 127.0.0.1:62663. Remaining connections: 1
+2025-05-08 01:02:25,442 - __main__ - INFO - Client disconnected: 127.0.0.1:62650. Remaining connections: 0
+2025-05-08 01:02:27,438 - __main__ - ERROR - Error during WebSocket connection: [Errno 2] No such file or directory: '01_Data/EFR.csv'
+2025-05-08 01:02:31,396 - __main__ - INFO - Starting query processing for 127.0.0.1:62664: Please join EFR and EQR based on ticker
+2025-05-08 01:02:31,397 - __main__ - ERROR - Error processing query for 127.0.0.1:62664: '127.0.0.1:62664'
+2025-05-08 01:02:31,397 - __main__ - ERROR - Traceback (most recent call last):
+  File "/Users/maxknuth/GenAI_Nasdaq/backend/main.py", line 160, in process_query_thread
+    self.app_instances[client_id].process_query(query)
+KeyError: '127.0.0.1:62664'
+
+2025-05-08 01:02:48,247 - DataProcessingApp - INFO - 🚀  Logging initialised – console + logs/app.log
+2025-05-08 01:02:48,248 - __main__ - INFO - Successfully imported DataProcessingApp from main.py
+2025-05-08 01:02:48,248 - __main__ - INFO - Starting server on port 9000
+2025-05-08 01:02:58,216 - __main__ - ERROR - Error during WebSocket connection: [Errno 2] No such file or directory: '01_Data/EFR.csv'
+2025-05-08 01:02:58,217 - __main__ - INFO - Starting query processing for 127.0.0.1:62677: Please show me the first 3 rows of the EFR dataset
+2025-05-08 01:02:58,217 - __main__ - ERROR - Error processing query for 127.0.0.1:62677: '127.0.0.1:62677'
+2025-05-08 01:02:58,217 - __main__ - ERROR - Traceback (most recent call last):
+  File "/Users/maxknuth/GenAI_Nasdaq/backend/main.py", line 160, in process_query_thread
+    self.app_instances[client_id].process_query(query)
+KeyError: '127.0.0.1:62677'
+
+2025-05-08 01:03:20,484 - DataProcessingApp - INFO - 🚀  Logging initialised – console + logs/app.log
+2025-05-08 01:03:20,484 - __main__ - INFO - Successfully imported DataProcessingApp from main.py
+2025-05-08 01:03:20,484 - __main__ - INFO - Starting server on port 9000
+2025-05-08 01:08:28,665 - __main__ - INFO - Client disconnected: 127.0.0.1:62664. Remaining connections: 1
+2025-05-08 01:09:08,929 - __main__ - ERROR - Error during WebSocket connection: [Errno 2] No such file or directory: '01_Data/EFR.csv'
+2025-05-08 01:09:08,931 - __main__ - INFO - Starting query processing for 127.0.0.1:62846: Please show me the first 3 rows of the EFR dataset
+2025-05-08 01:09:08,931 - __main__ - ERROR - Error processing query for 127.0.0.1:62846: '127.0.0.1:62846'
+2025-05-08 01:09:08,931 - __main__ - ERROR - Traceback (most recent call last):
+  File "/Users/maxknuth/GenAI_Nasdaq/backend/main.py", line 160, in process_query_thread
+KeyError: '127.0.0.1:62846'
+
+2025-05-08 01:11:36,977 - __main__ - ERROR - Error during WebSocket connection: [Errno 2] No such file or directory: '01_Data/EFR.csv'
+2025-05-08 01:11:36,979 - __main__ - INFO - Starting query processing for 127.0.0.1:62909: Please show me the first 3 rows of the EFR dataset
+2025-05-08 01:11:36,979 - __main__ - ERROR - Error processing query for 127.0.0.1:62909: '127.0.0.1:62909'
+2025-05-08 01:11:36,980 - __main__ - ERROR - Traceback (most recent call last):
+  File "/Users/maxknuth/GenAI_Nasdaq/backend/main.py", line 160, in process_query_thread
+    return
+KeyError: '127.0.0.1:62909'
+
+2025-05-08 01:12:20,885 - __main__ - ERROR - Error during WebSocket connection: [Errno 2] No such file or directory: '01_Data/EFR.csv'
+2025-05-08 01:12:20,887 - __main__ - INFO - Starting query processing for 127.0.0.1:62927: Please show me the first 3 rows of the EFR dataset
+2025-05-08 01:12:20,887 - __main__ - ERROR - Error processing query for 127.0.0.1:62927: '127.0.0.1:62927'
+2025-05-08 01:12:20,887 - __main__ - ERROR - Traceback (most recent call last):
+  File "/Users/maxknuth/GenAI_Nasdaq/backend/main.py", line 160, in process_query_thread
+    return
+KeyError: '127.0.0.1:62927'
+
+2025-05-08 01:12:56,759 - __main__ - INFO - Client disconnected: 127.0.0.1:62677. Remaining connections: 3
+2025-05-08 01:13:01,717 - __main__ - INFO - Client disconnected: 127.0.0.1:62846. Remaining connections: 2
+2025-05-08 01:13:04,684 - __main__ - INFO - Client disconnected: 127.0.0.1:62909. Remaining connections: 1
+2025-05-08 01:13:05,009 - __main__ - INFO - Client disconnected: 127.0.0.1:62927. Remaining connections: 0
+2025-05-08 01:14:29,907 - __main__ - ERROR - Error during WebSocket connection: [Errno 2] No such file or directory: '01_Data/EFR.csv'
+2025-05-08 01:14:29,909 - __main__ - INFO - Starting query processing for 127.0.0.1:62997: Please show me the first 3 rows of the EFR dataset
+2025-05-08 01:14:29,909 - __main__ - ERROR - Error processing query for 127.0.0.1:62997: '127.0.0.1:62997'
+2025-05-08 01:14:29,909 - __main__ - ERROR - Traceback (most recent call last):
+  File "/Users/maxknuth/GenAI_Nasdaq/backend/main.py", line 160, in process_query_thread
+    return
+KeyError: '127.0.0.1:62997'
+
+2025-05-08 01:17:28,726 - __main__ - INFO - Client disconnected: 127.0.0.1:62997. Remaining connections: 0

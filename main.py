@@ -49,12 +49,26 @@ def load_api_keys() -> tuple[str, str]:
     return deepseek, openai
 
 def load_dataframes() -> dict[str, pd.DataFrame]:
-    base = Path("01_Data")
+    # Use absolute path to find data files
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    base = Path(current_dir) / "01_Data"
+    
+    logger.info(f"Loading data files from {base}")
+    
     files = {
         "EFR":  base / "EFR.csv",
         "EQR":  base / "EQR.csv",
         "SKMS": base / "SKMS.csv",
     }
+    
+    # Check if files exist
+    for name, path in files.items():
+        if not path.exists():
+            logger.error(f"Data file not found: {path}")
+            raise FileNotFoundError(f"Data file not found: {path}")
+        else:
+            logger.info(f"Found data file: {path}")
+    
     return {name: pd.read_csv(path) for name, path in files.items()}
 
 def to_dict_if_pairs(x):
@@ -221,7 +235,8 @@ if __name__ == "__main__":
     example_queries = [
          # "Please convert the date column in the EQR dataset from EST timezone to UTC timezone.", # success 2 additional input - use SKMS - use New_date column
          # "Please convert the date column in the SKMS dataset to UTC timezone.", # success 2 additional input - define original timezone - redefine column
-         "Please Join EFR and EQR based on ticker" # success first run
+         #"Please Join EFR and EQR based on ticker" # success first run
+         'Convert the date column in SKMS table from EST to UTC timezone'
          # "Please Join EFR and EQR table based on Sales column" # success 1 additional input (define tz + redefine table) - use ticker/date column
          # "Please Join EFR and EQR table" # success 2 additional input -> use tickers column  -> use ticker column
          # "Please convert the New_date column in the EQR dataset from EST timezone to UTC timezone then join the new table with EFR based on ticker column"
