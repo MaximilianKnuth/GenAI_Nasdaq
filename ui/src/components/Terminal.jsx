@@ -70,6 +70,12 @@ export const Terminal = ({
             <pre>{message.content}</pre>
           </div>
         );
+      case 'process_complete':
+        return (
+          <div key={index} className="message system-message">
+            <span className="prefix">System:</span> Query processing completed. Generated code is saved to <code>generated_code.py</code> and results are available as CSV files in the root directory.
+          </div>
+        );
       default:
         return (
           <div key={index} className="message unknown-message">
