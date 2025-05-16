@@ -109,9 +109,9 @@ chmod +x start_fresh.sh
    ```
    Join EFR.csv and EQR.csv on ticker and date columns
    ```
-3. **Analyze Data**
+3. **Combined**
    ```
-   Calculate the average price for AAPL stock from EQR.csv
+   Please convert the New_date column in the SKMS dataset from EST timezone to UTC timezone then join the new table with EFR based on ticker column
    ```
 
 ---
