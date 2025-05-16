@@ -9,8 +9,19 @@ try:
     
     # Convert New_date from EST to UTC
     eastern = pytz.timezone('US/Eastern')
+    utc = pytz.utc
+    
+    # Convert string to datetime (assuming it's in Eastern time)
     df['New_date'] = pd.to_datetime(df['New_date'])
-    df['New_date'] = df['New_date'].apply(lambda x: eastern.localize(x).astimezone(pytz.utc))
+    
+    # Localize as EST (assuming naive datetime is in EST)
+    df['New_date'] = df['New_date'].dt.tz_localize(eastern)
+    
+    # Convert to UTC
+    df['New_date'] = df['New_date'].dt.tz_convert(utc)
+    
+    # Remove timezone info for cleaner CSV output (optional)
+    df['New_date'] = df['New_date'].dt.tz_localize(None)
     
     # Save transformed dataset
     df.to_csv('SKMS_transformed.csv', index=False)

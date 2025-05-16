@@ -1,146 +1,127 @@
 # NASDAQ GenAI Terminal
 
-A natural language interface for querying and analyzing financial data using AI.
+![NASDAQ GenAI Terminal Interface](assets/terminal_screenshot.png)
 
-## Overview
+> **Note**: Replace the image path above with your actual screenshot once you've added it to your repository.
 
-NASDAQ GenAI Terminal is an interactive application that allows users to query financial datasets using natural language or Python code. The application leverages AI to interpret user queries, process data, and provide insightful results.
+## 🚀 Overview
 
-## Features
+NASDAQ GenAI Terminal is an AI-powered financial data analysis tool that allows you to query stock market data using natural language. Simply type what you want to know, and the system will understand your intent, process the relevant data, and return meaningful results.
 
-- **Natural Language Interface**: Query financial data using plain English
-- **Python Code Execution**: Run Python code for custom data analysis
-- **Interactive Experience**: Real-time feedback and results
-- **WebSocket Communication**: Stable and responsive connection between frontend and backend
-- **Multiple Dataset Support**: Access and join various financial datasets
+**[View Demo Video](https://youtu.be/your-demo-video)** *(Replace with your actual demo video link)*
 
-## Project Structure
+## ✨ Features
 
-```
-GenAI_Nasdaq/
-├── 01_Data/                 # Financial datasets
-│   ├── EFR.csv              # Sample financial data
-│   ├── EQR.csv              # Sample financial data
-│   └── SKMS.csv             # Sample financial data
-├── backend/                 # Backend server code
-│   ├── agent_functions.py   # AI agent functionality
-│   ├── main.py              # FastAPI server implementation
-│   └── ...
-├── ui/                      # Frontend code
-│   ├── src/                 # React application source
-│   │   ├── App.jsx          # Main application component
-│   │   └── ...
-│   └── ...
-├── logs/                    # Application logs
-├── example_query.py         # Example script for programmatic queries
-├── test_websocket.py        # WebSocket connection test script
-├── websocket_test.html      # Browser-based WebSocket testing
-├── start_fresh.sh           # Script to start servers with clean logs
-├── usage_guide.md           # Detailed usage instructions
-└── README.md                # This file
-```
+- **Natural Language Queries**: Ask questions about financial data in plain English
+- **Multiple Data Operations**: 
+  - Convert datetime between timezones
+  - Join multiple datasets
+  - Filter and analyze financial data
+- **Real-time Processing**: Get instant feedback as your query is processed
+- **Interactive Confirmation**: Review and confirm the system's understanding of your request
+- **Terminal-like Interface**: Familiar experience for finance professionals
 
-## Getting Started
+## 📊 Supported Datasets
+
+The system comes pre-loaded with sample financial datasets:
+
+- **EFR.csv**: Stock price and volume data
+- **EQR.csv**: Extended stock data with timezone information
+- **SKMS.csv**: Additional market data for analysis
+
+## 🛠️ Installation
 
 ### Prerequisites
 
 - Python 3.8+
 - Node.js 14+
-- Required Python packages (see requirements.txt)
+- npm or yarn
 
-### Installation
+### Setup
 
 1. Clone the repository:
-   ```
-   git clone <repository-url>
+   ```bash
+   git clone https://github.com/yourusername/GenAI_Nasdaq.git
    cd GenAI_Nasdaq
    ```
 
 2. Install backend dependencies:
-   ```
+   ```bash
    pip install -r requirements.txt
    ```
 
 3. Install frontend dependencies:
-   ```
+   ```bash
    cd ui
    npm install
    cd ..
    ```
 
-### Running the Application
+4. Make the start script executable:
+   ```bash
+   chmod +x start_fresh.sh
+   ```
 
-Use the provided script to start both backend and frontend servers:
+## 🚀 Running the Application
 
-```
-./start_fresh.sh
-```
+1. Start both servers with one command:
+   ```bash
+   ./start_fresh.sh
+   ```
 
-This will:
-1. Stop any existing server processes
-2. Clear old log files
-3. Start the backend server on port 9000
-4. Start the frontend server on port 3001
+2. Access the application:
+   - Main interface: [http://localhost:3001](http://localhost:3001) or [http://127.0.0.1:3001](http://127.0.0.1:3001)
+   - WebSocket test page: Open `websocket_test.html` in your browser
 
-Access the application at: http://localhost:3001
+## 💡 Usage Examples
 
-## Usage
-
-See the [usage guide](usage_guide.md) for detailed instructions on how to use the application.
-
-### Basic Query Flow
-
-1. Enter your query in the input field
-2. The system will classify your task
-3. Confirm the task classification
-4. View the results in the terminal output
-
-### Example Queries
-
-- "Please show me the first 3 rows of the EFR dataset"
-- "Join EFR and EQR datasets based on ticker"
-- "Calculate the average price for each ticker in the EFR dataset"
-- "Convert the date column in EQR from EST to UTC"
-
-## Testing
-
-### WebSocket Connection Test
-
-Run the WebSocket test script to verify connectivity:
+### Example 1: Convert Datetime
 
 ```
-python test_websocket.py
+Convert the New_date column in SKMS.csv from US/Eastern to UTC timezone
 ```
 
-Or open the WebSocket test page in your browser:
+### Example 2: Join Datasets
 
 ```
-file:///path/to/GenAI_Nasdaq/websocket_test.html
+Join EFR.csv and EQR.csv on ticker and date columns
 ```
 
-### Programmatic Queries
-
-Use the example script to run queries programmatically:
+### Example 3: Data Analysis
 
 ```
-python example_query.py
+Calculate the average price for AAPL stock from EQR.csv
 ```
 
-## Troubleshooting
+## 🔍 How It Works
+
+![System Architecture](assets/architecture_diagram.png)
+
+1. **User Input**: Enter your query in the terminal interface
+2. **Task Classification**: The system identifies what you're trying to accomplish
+3. **Confirmation**: Review and confirm the detected tasks
+4. **Processing**: The system executes the necessary data operations
+5. **Results**: View the results directly in the terminal interface
+
+## 🛠️ Troubleshooting
 
 If you encounter issues:
 
-1. Check the logs in the `logs/` directory
-2. Ensure both backend and frontend servers are running
-3. Verify that the required data files exist in the `01_Data/` directory
-4. Check browser console for any frontend errors
+1. Check the logs in the `logs` directory
+2. Ensure both servers are running (backend on port 9000, frontend on port 3001)
+3. Try using `127.0.0.1` instead of `localhost` if connection issues occur
+4. For Safari users, enable developer tools and disable cross-origin restrictions
 
-## License
+## 🤝 Contributing
 
-[Specify your license here]
+Contributions are welcome! Please feel free to submit a Pull Request.
 
-## Acknowledgements
+## 📄 License
 
-- OpenAI for AI capabilities
+This project is licensed under the MIT License - see the LICENSE file for details.
+
+## 🙏 Acknowledgements
+
+- OpenAI for providing the AI capabilities
 - FastAPI for the backend framework
 - React for the frontend framework 
