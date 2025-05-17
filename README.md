@@ -70,6 +70,16 @@ Nas1 validates the schema, confirms your intent, generates Python code, and exec
 
 ---
 
+## Model Architecture
+
+- `state_schema.py`: Declared state fields that needs to be filled in
+- `langgraph_implementation.py`: Workflow definition for langgraph nodes and edges
+- `agent_functions.py`: All node/agent functions
+- `main.py`: File to call if want to run program from terminal
+- `start_fresh.sh`: File to call if want to run program from UI
+  
+---
+
 ## 🛠️ Installation Guide
 
 ### Prerequisites
@@ -138,12 +148,6 @@ chmod +x start_fresh.sh
 ## 🤝 Contributing
 
 We welcome improvements! Please fork the repository and submit a Pull Request.
-
----
-
-## 📄 License
-
-MIT License. See [LICENSE](LICENSE) for details.
 
 ---
 
