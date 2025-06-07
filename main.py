@@ -12,6 +12,7 @@ import sys
 from pprint import pformat  
 import logging
 import pathlib
+from dotenv import load_dotenv
 
 # ── 1️⃣  make sure the log directory exists
 log_dir = pathlib.Path("logs")
@@ -42,10 +43,11 @@ print("🚀  Logging initialised – console + logs/app.log")
 # Configuration helpers
 # ──────────────────────────────────────────────────────────────────────────
 def load_api_keys() -> tuple[str, str]:
-    deepseek = 'sk-74c415edef3f4a16b1ef8deb3839cf2a'
-    openai   = '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'
+    load_dotenv()  # This loads the .env file into environment variables
+    deepseek = os.getenv('DEEPSEEK_API_KEY')
+    openai = os.getenv('OPENAI_API_KEY')
     if not (deepseek and openai):
-        raise RuntimeError("Set DEEPSEEK_API_KEY and OPENAI_API_KEY in your env")
+        raise RuntimeError("Set DEEPSEEK_API_KEY and OPENAI_API_KEY in your .env file")
     return deepseek, openai
 
 def load_dataframes() -> dict[str, pd.DataFrame]:
