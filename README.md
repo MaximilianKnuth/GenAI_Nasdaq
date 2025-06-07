@@ -1,159 +1,89 @@
-# ✅ NASDAQ GenAI Terminal
+# NASDAQ GenAI Terminal
 
-![NASDAQ GenAI Terminal Interface](assets/terminal_screenshot.png)
+A conversational data pipeline assistant that helps transform data using natural language instructions.
 
-> Empowering Nasdaq’s Data Product Managers to Build Pipelines with Natural Language  
-> _Built with FastAPI, LangGraph, DeepSeek-V3, OpenAI Embeddings, and React_
+## System Structure
 
----
+### Core Components
+- `backend/` - FastAPI backend server
+  - `main.py` - Main FastAPI application (if without UI, will directly run from terminal)
+  - `run_backend_debug.py` - Debug runner for backend
+- `ui/` - React frontend application
+- `logs/` - Application logs directory
 
-## 🚀 What is Nas1?
+### Key Files 
+- `start_fresh.sh` - Main startup script (starts both backend and frontend)
+- `agent_functions.py` - Core agent functionality and data processing (LangGraph)
+- `state_schema.py` - State management and data structures (LangGraph)
+- `requirements.txt` - Python dependencies
+- `package.json` - Frontend dependencies (in ui/ directory)
 
-**Nas1** is Nasdaq’s first conversational data pipeline assistant. It helps non-technical users transform data using plain English instructions. From joining tables to timezone conversions, Nas1 automates repetitive engineering tasks so teams can focus on more complex data product development.
+### Data Files
+- `SKMS.csv` - Market activity logs (main dataset)
+- `EFR.csv` - Stock price and volume data
+- `EQR.csv` - Extended stock data
 
-🏆 **Proven Impact**  
-- 20-40% increase in engineering capacity  
-- Up to 75% more data products onboarded  
-- $6-8M in additional annual revenue potential
+## Installation
 
----
-
-## ✨ Key Features
-
-- 🗣️ **Natural Language Interaction**  
-  Describe your data task in plain English.
-- ⚙️ **Agentic Multi-Task Execution**  
-  Specialized agents classify, validate, and execute your request.
-- 🔄 **Human-in-the-Loop Confirmation**  
-  Interactive prompts for safe and reliable execution.
-- 🔍 **Real-Time Metadata Validation**  
-  Powered by Retrieval-Augmented Generation (RAG).
-- 🖥️ **Terminal-Style Web Interface**  
-  Designed for finance professionals, no coding required.
-
----
-
-## 🖼️ Example Interaction
-
-![System Interaction Example](assets/ui_screenshot.png)
-
-> *"Convert the `New_date` column in SKMS.csv from US/Eastern to UTC."*  
-Nas1 validates the schema, confirms your intent, generates Python code, and executes securely.
-
----
-
-## 🏗️ Architecture Overview
-
-- **Backend (FastAPI)**:  
-  - WebSocket server for real-time interaction  
-  - Modular agent system powered by DeepSeek-V3 and OpenAI Embeddings  
-  - Secure execution of data transformations on synthetic datasets
-
-- **Frontend (React)**:  
-  - Terminal-style chat interface  
-  - Interactive clarification prompts  
-  - Real-time progress and results display
-
-- **Communication (WebSocket)**:  
-  - Bi-directional stateful messaging  
-  - Session management and asynchronous updates
-
----
-
-## 📦 Example Datasets
-
-- `EFR.csv`: Stock price and volume data  
-- `EQR.csv`: Extended stock data with timezone metadata  
-- `SKMS.csv`: Market activity logs
-
-> ⚠️ _Note: These are synthetic datasets used for safe prototyping._
-
----
-
-## Model Architecture
-
-- `state_schema.py`: Declared state fields that needs to be filled in
-- `langgraph_implementation.py`: Workflow definition for langgraph nodes and edges
-- `agent_functions.py`: All node/agent functions
-- `main.py`: File to call if want to run program from terminal
-- `start_fresh.sh`: File to call if want to run program from UI
-  
----
-
-## 🛠️ Installation Guide
-
-### Prerequisites
-- Python 3.10+
-- Node.js 14+
-- npm or yarn
-
-### Setup Instructions
+1. Install Python dependencies:
 ```bash
-git clone https://github.com/yourusername/GenAI_Nasdaq.git
-cd GenAI_Nasdaq
 pip install -r requirements.txt
+```
+
+2. Install frontend dependencies:
+```bash
 cd ui
 npm install
 cd ..
+```
+
+3. Make startup script executable:
+```bash
 chmod +x start_fresh.sh
 ```
 
----
+## Running the Application
 
-## 🚀 Launch the Application
+1. Start both backend and frontend:
 ```bash
 ./start_fresh.sh
 ```
 
-- Open your browser at [http://localhost:3001](http://localhost:3001)
+2. Access the application:
+- Frontend: http://localhost:3001
+- Backend API: http://localhost:9000
 
----
+## System Flow
 
-## 💬 Example Queries
+1. User inputs natural language request in web interface
+2. Frontend sends request to backend via WebSocket
+3. Backend processes request through agent system:
+   - Task classification
+   - Data validation
+   - Code generation
+   - Execution
+4. Results are streamed back to frontend in real-time
 
-1. **Convert Timezones**
-   ```
-   Convert the New_date column in SKMS.csv from US/Eastern to UTC timezone
-   ```
-2. **Join Tables**
-   ```
-   Join EFR.csv and EQR.csv on ticker and date columns
-   ```
-3. **Combined**
-   ```
-   Please convert the New_date column in the SKMS dataset from EST timezone to UTC timezone then join the new table with EFR based on ticker column
-   ```
+## Troubleshooting
 
----
-
-## 🧠 How It Works
-
-1. **User Input** → Natural language task description  
-2. **Task Classification** → Intent identified by DeepSeek-V3  
-3. **Validation** → Metadata checked via RAG and user confirmation  
-4. **Execution** → Python code generated and securely executed  
-5. **Results** → Delivered instantly in the web interface
-
----
-
-## 🛠️ Troubleshooting Tips
-
-- Check logs in the `logs/` directory
-- Ensure backend (port 9000) and frontend (port 3001) are running
+- Check `logs/` directory for detailed logs
+- Backend runs on port 9000
+- Frontend runs on port 3001
 - Use `127.0.0.1` if `localhost` fails to connect
-- Safari users: Enable developer tools and disable CORS
 
----
+## Example Queries
 
-## 🤝 Contributing
+1. Timezone conversion:
+```
+Convert the New_date column in SKMS.csv from US/Eastern to UTC
+```
 
-We welcome improvements! Please fork the repository and submit a Pull Request.
+2. Table join:
+```
+Join EFR.csv and EQR.csv on ticker and date columns
+```
 
----
-
-## 🙏 Acknowledgements
-
-- Nasdaq for the opportunity to build this prototype
-- OpenAI and DeepSeek for AI services
-- FastAPI and React for powering the platform
-- LangChain for enabling agentic workflow orchestration
+3. Combined operations:
+```
+Convert New_date in SKMS.csv from EST to UTC, then join with EFR on ticker
+```

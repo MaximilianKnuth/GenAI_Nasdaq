@@ -2,23 +2,39 @@
 
 # Function to stop processes on exit
 cleanup() {
-  echo "Stopping servers..."
+  echo "Stopping servers and cleaning up..."
+  
+  # Kill backend processes
   if [ -n "$BACKEND_PID" ]; then
     echo "Killing backend process $BACKEND_PID"
     kill $BACKEND_PID 2>/dev/null || kill -9 $BACKEND_PID 2>/dev/null
   fi
   
+  # Kill frontend processes
   if [ -n "$FRONTEND_PID" ]; then
     echo "Killing frontend process $FRONTEND_PID"
     kill $FRONTEND_PID 2>/dev/null || kill -9 $FRONTEND_PID 2>/dev/null
   fi
+  
+  # Additional cleanup of any remaining processes
+  echo "Cleaning up any remaining server processes..."
+  pkill -f "python.*main.py" || true
+  pkill -f "python.*run_backend_debug.py" || true
+  pkill -f "npm run dev" || true
+  
+  # Clean up only frontend log files and temporary logs
+  echo "Cleaning up frontend log files..."
+  rm -f logs/frontend_fresh.log
+  rm -f logs/*.tmp.log
+  rm -f debug_backend.log
+  rm -f workflow.mmd
   
   echo "Cleanup complete"
   exit 0
 }
 
 # Set up trap to catch Ctrl+C and other termination signals
-trap cleanup INT TERM
+trap cleanup INT TERM EXIT
 
 # Kill any existing servers on the same ports
 echo "Cleaning up any existing servers..."

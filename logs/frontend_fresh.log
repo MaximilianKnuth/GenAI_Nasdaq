@@ -1,9 +1,0 @@
-
-> ui@1.0.0 dev
-> vite --host --port 3001
-
-
-  VITE v5.4.19  ready in 91 ms
-
-  ➜  Local:   http://localhost:3001/
-  ➜  Network: http://10.12.203.166:3001/
