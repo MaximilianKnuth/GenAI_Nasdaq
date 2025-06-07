@@ -13,6 +13,7 @@ from pprint import pformat
 import logging
 import pathlib
 from dotenv import load_dotenv
+from typing import Dict
 
 # ── 1️⃣  make sure the log directory exists
 log_dir = pathlib.Path("logs")
@@ -43,12 +44,26 @@ print("🚀  Logging initialised – console + logs/app.log")
 # Configuration helpers
 # ──────────────────────────────────────────────────────────────────────────
 def load_api_keys() -> tuple[str, str]:
-    load_dotenv()  # This loads the .env file into environment variables
-    deepseek = os.getenv('DEEPSEEK_API_KEY')
-    openai = os.getenv('OPENAI_API_KEY')
-    if not (deepseek and openai):
-        raise RuntimeError("Set DEEPSEEK_API_KEY and OPENAI_API_KEY in your .env file")
-    return deepseek, openai
+    print("\n🔑 API Key Configuration")
+    print("────────────────────────")
+    
+    # Use a try-except block to handle potential EOF errors in WebSocket mode
+    try:
+        deepseek = input("Please enter your Deepseek API key: ").strip()
+        openai = input("Please enter your OpenAI API key: ").strip()
+        
+        if not (deepseek and openai):
+            raise RuntimeError("Both API keys are required to continue")
+        
+        print("✅ API keys configured successfully\n")
+        return deepseek, openai
+        
+    except EOFError:
+        # If we're in WebSocket mode and can't get input, use default keys
+        print("⚠️  Running in WebSocket mode - using default API keys")
+        deepseek = 'sk-74c415edef3f4a16b1ef8deb3839cf2a'
+        openai = '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'
+        return deepseek, openai
 
 def load_dataframes() -> dict[str, pd.DataFrame]:
     # Use absolute path to find data files
@@ -127,8 +142,13 @@ def log_banner(text: str, level=logging.INFO):
 # The application wrapper
 # ──────────────────────────────────────────────────────────────────────────
 class DataProcessingApp:
-    def __init__(self) -> None:
-        self.api_key, self.openai_api_key = load_api_keys()
+    def __init__(self, api_keys: Dict[str, str] = None) -> None:
+        if api_keys:
+            self.api_key = api_keys.get('deepseek', '')
+            self.openai_api_key = api_keys.get('openai', '')
+        else:
+            self.api_key, self.openai_api_key = load_api_keys()
+        
         self.df_dict = load_dataframes()
 
         # Build and compile the graph

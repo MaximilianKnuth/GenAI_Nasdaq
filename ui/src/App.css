@@ -110,4 +110,94 @@ footer p {
   .input-prompt {
     color: #ff79c6;
   }
+}
+
+.api-key-form {
+  max-width: 500px;
+  margin: 2rem auto;
+  padding: 2rem;
+  background-color: #1e1e1e;
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.api-key-form h2 {
+  color: #fff;
+  margin-bottom: 1.5rem;
+  text-align: center;
+}
+
+.api-key-form .form-group {
+  margin-bottom: 1.5rem;
+}
+
+.api-key-form label {
+  display: block;
+  color: #fff;
+  margin-bottom: 0.5rem;
+  font-size: 0.9rem;
+}
+
+.api-key-form input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 1px solid #444;
+  border-radius: 4px;
+  background-color: #2d2d2d;
+  color: #fff;
+  font-size: 1rem;
+}
+
+.api-key-form input:focus {
+  outline: none;
+  border-color: #6a1b9a;
+  box-shadow: 0 0 0 2px rgba(106, 27, 154, 0.2);
+}
+
+.api-key-form button {
+  width: 100%;
+  padding: 0.75rem;
+  background-color: #6a1b9a;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: background-color 0.2s;
+}
+
+.api-key-form button:hover:not(:disabled) {
+  background-color: #7b1fa2;
+}
+
+.api-key-form button:disabled {
+  background-color: #444;
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+@media (prefers-color-scheme: light) {
+  .api-key-form {
+    background-color: #fff;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  }
+
+  .api-key-form h2 {
+    color: #333;
+  }
+
+  .api-key-form label {
+    color: #333;
+  }
+
+  .api-key-form input {
+    background-color: #f5f5f5;
+    border-color: #ddd;
+    color: #333;
+  }
+
+  .api-key-form input:focus {
+    border-color: #6a1b9a;
+    box-shadow: 0 0 0 2px rgba(106, 27, 154, 0.1);
+  }
 } 
