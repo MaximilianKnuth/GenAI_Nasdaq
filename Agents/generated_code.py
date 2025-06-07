@@ -4,9 +4,9 @@ import os
 
 # Load dataset
 try:
-    df = pd.read_csv('01_Data/SKMS.csv')
+    df = pd.read_csv('Data/SKMS.csv')
 except FileNotFoundError:
-    raise FileNotFoundError("The file '01_Data/SKMS.csv' was not found. Please check the path.")
+    raise FileNotFoundError("The file 'Data/SKMS.csv' was not found. Please check the path.")
 
 # Convert timezone from ET to UTC
 original_tz = timezone('US/Eastern')
@@ -26,6 +26,6 @@ else:
     raise ValueError("Column 'New_date' not found in the dataset.")
 
 # Save transformed data
-base_path, ext = os.path.splitext('01_Data/SKMS.csv')
+base_path, ext = os.path.splitext('Data/SKMS.csv')
 output_path = f"{base_path}_transformed_3434343{ext}"
 df.to_csv(output_path, index=False)

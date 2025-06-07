@@ -68,7 +68,7 @@ def load_api_keys() -> tuple[str, str]:
 def load_dataframes() -> dict[str, pd.DataFrame]:
     # Use absolute path to find data files
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    base = Path(current_dir) / "01_Data"
+    base = Path(current_dir) / "Data"
     
     logger.info(f"Loading data files from {base}")
     

@@ -6,9 +6,9 @@ from docx import Document  # For reading .docx files
 if __name__ == "__main__":
     # Load CSVs into Pandas DataFrames
     file_paths = {
-        "EFR": "01_Data/EFR.csv",
-        "EQR": "01_Data/EQR.csv",
-        "SKMS": "01_Data/SKMS.csv",
+        "EFR": "Data/EFR.csv",
+        "EQR": "Data/EQR.csv",
+        "SKMS": "Data/SKMS.csv",
     }
 
     # Prompt the user to input the DeepSeek API key

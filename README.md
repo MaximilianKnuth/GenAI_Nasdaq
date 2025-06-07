@@ -1,89 +1,90 @@
-# NASDAQ GenAI Terminal
+# GenAI Nasdaq Project
 
-A conversational data pipeline assistant that helps transform data using natural language instructions.
+A powerful data processing and transformation system that leverages AI agents to handle complex data operations.
 
-## System Structure
+## Project Structure
 
-### Core Components
-- `backend/` - FastAPI backend server
-  - `main.py` - Main FastAPI application (if without UI, will directly run from terminal)
-  - `run_backend_debug.py` - Debug runner for backend
-- `ui/` - React frontend application
-- `logs/` - Application logs directory
-
-### Key Files 
-- `start_fresh.sh` - Main startup script (starts both backend and frontend)
-- `agent_functions.py` - Core agent functionality and data processing (LangGraph)
-- `state_schema.py` - State management and data structures (LangGraph)
-- `requirements.txt` - Python dependencies
-- `package.json` - Frontend dependencies (in ui/ directory)
-
-### Data Files
-- `SKMS.csv` - Market activity logs (main dataset)
-- `EFR.csv` - Stock price and volume data
-- `EQR.csv` - Extended stock data
-
-## Installation
-
-1. Install Python dependencies:
-```bash
-pip install -r requirements.txt
+```
+GenAI_Nasdaq/
+├── Agents/                    # AI agent implementations
+├── Data/                     # Data storage directory
+│   ├── text_data/           # Documentation and text data
+│   ├── EFR.csv              # EFR dataset
+│   ├── EQR.csv              # EQR dataset
+│   └── SKMS.csv             # SKMS dataset
+├── logs/                     # Log files directory
+├── ui/                       # Frontend user interface
+├── main.py                   # Main application entry point
+├── agent_functions.py        # Core agent functionality
+├── langgraph_implementation.py # LangGraph workflow implementation
+├── requirements.txt          # Python dependencies
+├── run_backend_debug.py      # Backend debugging script
+├── start_fresh.sh           # Startup script with cleanup
+└── state_schema.py          # State management schema
 ```
 
-2. Install frontend dependencies:
-```bash
-cd ui
-npm install
-cd ..
-```
+## Key Components
 
-3. Make startup script executable:
-```bash
-chmod +x start_fresh.sh
-```
+### Data (synthetic data)
+- **text_data/**: Contains documentation and reference materials
+- **EFR.csv**: EFR dataset
+- **EQR.csv**: EQR dataset
+- **SKMS.csv**: SKMS dataset
 
-## Running the Application
+### Core Files
+- **main.py**: Application entry point and main workflow
+- **agent_functions.py**: Core functionality for all agents (LangGraph)
+- **langgraph_implementation.py**: Implements the LangGraph workflow (LangGraph)
+- **state_schema.py**: Defines the state management structure (LangGraph)
+- **run_backend_debug.py**: Debugging utilities for the backend
+- **start_fresh.sh**: Startup script with automatic cleanup
 
-1. Start both backend and frontend:
-```bash
-./start_fresh.sh
-```
+## Features
 
-2. Access the application:
-- Frontend: http://localhost:3001
-- Backend API: http://localhost:9000
+1. **Intelligent Data Processing**
+   - Automated data validation
+   - Timezone conversion
+   - Table joining operations
+   - Data transformation
 
-## System Flow
+2. **AI-Powered Operations**
+   - RAG-based information retrieval
+   - LLM-driven code generation
+   - Smart error handling and recovery
 
-1. User inputs natural language request in web interface
-2. Frontend sends request to backend via WebSocket
-3. Backend processes request through agent system:
-   - Task classification
-   - Data validation
-   - Code generation
-   - Execution
-4. Results are streamed back to frontend in real-time
+## Getting Started
 
-## Troubleshooting
+1. Clone the repository
+2. Install dependencies:
+   ```bash
+   pip install -r requirements.txt
+   ```
+3. Run the application:
+   ```bash
+   ./start_fresh.sh
+   ```
 
-- Check `logs/` directory for detailed logs
-- Backend runs on port 9000
-- Frontend runs on port 3001
-- Use `127.0.0.1` if `localhost` fails to connect
+## Usage
 
-## Example Queries
+The system supports various data operations:
 
-1. Timezone conversion:
-```
-Convert the New_date column in SKMS.csv from US/Eastern to UTC
-```
+1. **Timezone Conversion**
+   - Convert datetime columns between different timezones
+   - Automatic timezone detection and validation
 
-2. Table join:
-```
-Join EFR.csv and EQR.csv on ticker and date columns
-```
+2. **Table Operations**
+   - Join tables based on specified columns
+   - Data validation and cleaning
+   - Chunking and processing large tables
 
-3. Combined operations:
-```
-Convert New_date in SKMS.csv from EST to UTC, then join with EFR on ticker
-```
+## Development
+
+- Use `start_fresh.sh` for development to ensure a clean environment
+- Check `logs/` directory for operation logs
+- Use `run_backend_debug.py` for debugging backend operations
+
+## Notes
+
+- The system automatically cleans up temporary files and logs on exit
+- All data operations are logged for debugging and auditing
+- The system uses both OpenAI and DeepSeek models for different operations

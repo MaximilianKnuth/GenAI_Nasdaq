@@ -1,123 +1,123 @@
-2025-06-07 18:17:59,203 - debug_script - INFO - Attempting to import and run the backend server...
-2025-06-07 18:17:59,204 - debug_script - INFO - Backend main path: /Users/xingyugong/GenAI_Nasdaq/GenAI_Nasdaq/backend/main.py
-2025-06-07 18:17:59,204 - debug_script - INFO - Module spec created, executing module...
-2025-06-07 18:18:00,386 - numexpr.utils - INFO - NumExpr defaulting to 8 threads.
-2025-06-07 18:18:04,429 - DataProcessingApp - INFO - 🚀  Logging initialised – console + logs/app.log
-2025-06-07 18:18:04,429 - backend_main - INFO - Successfully imported DataProcessingApp from parent main.py
-2025-06-07 18:18:04,430 - debug_script - INFO - Starting backend server on host 0.0.0.0, port 9000...
+2025-06-07 18:28:41,874 - debug_script - INFO - Attempting to import and run the backend server...
+2025-06-07 18:28:41,875 - debug_script - INFO - Backend main path: /Users/xingyugong/GenAI_Nasdaq/GenAI_Nasdaq/backend/main.py
+2025-06-07 18:28:41,875 - debug_script - INFO - Module spec created, executing module...
+2025-06-07 18:28:42,948 - numexpr.utils - INFO - NumExpr defaulting to 8 threads.
+2025-06-07 18:28:45,488 - DataProcessingApp - INFO - 🚀  Logging initialised – console + logs/app.log
+2025-06-07 18:28:45,489 - backend_main - INFO - Successfully imported DataProcessingApp from parent main.py
+2025-06-07 18:28:45,490 - debug_script - INFO - Starting backend server on host 0.0.0.0, port 9000...
 🚀  Logging initialised – console + logs/app.log
 
 🔑 API Key Configuration
 ────────────────────────
-Please enter your Deepseek API key: 2025-06-07 18:18:09,218 - DataProcessingApp - INFO - Loading data files from /Users/xingyugong/GenAI_Nasdaq/GenAI_Nasdaq/01_Data
-2025-06-07 18:18:09,219 - DataProcessingApp - INFO - Found data file: /Users/xingyugong/GenAI_Nasdaq/GenAI_Nasdaq/01_Data/EFR.csv
-2025-06-07 18:18:09,219 - DataProcessingApp - INFO - Found data file: /Users/xingyugong/GenAI_Nasdaq/GenAI_Nasdaq/01_Data/EQR.csv
-2025-06-07 18:18:09,219 - DataProcessingApp - INFO - Found data file: /Users/xingyugong/GenAI_Nasdaq/GenAI_Nasdaq/01_Data/SKMS.csv
+Please enter your Deepseek API key: 2025-06-07 18:28:52,200 - DataProcessingApp - INFO - Loading data files from /Users/xingyugong/GenAI_Nasdaq/GenAI_Nasdaq/Data
+2025-06-07 18:28:52,200 - DataProcessingApp - INFO - Found data file: /Users/xingyugong/GenAI_Nasdaq/GenAI_Nasdaq/Data/EFR.csv
+2025-06-07 18:28:52,200 - DataProcessingApp - INFO - Found data file: /Users/xingyugong/GenAI_Nasdaq/GenAI_Nasdaq/Data/EQR.csv
+2025-06-07 18:28:52,200 - DataProcessingApp - INFO - Found data file: /Users/xingyugong/GenAI_Nasdaq/GenAI_Nasdaq/Data/SKMS.csv
 ⚠️  Running in WebSocket mode - using default API keys
 
 🖼  ASCII graph
 
-                                                                                                                                             +-----------+                                                                                                                                                 
-                                                                                                                                             | __start__ |                                                                                                                                                 
-                                                                                                                                             +-----------+                                                                                                                                                 
-                                                                                                                                                    *                                                                                                                                                      
-                                                                                                                                                    *                                                                                                                                                      
-                                                                                                                                                    *                                                                                                                                                      
-                                                                                                                                          +------------------+...........                                                                                                                                  
-                                                                                                                                        ..| first_run_router |......     ....................                                                                                                              
-                                                                                                                                 .......  +------------------+      .........                .....................                                                                                         
-                                                                                                                        .........                                            ...........                          .....................                                                                    
-                                                                                                                 .......                                                                .........                                      .....................                                               
-                                                                                                            .....                                                                                ...........                                                ....................                           
-                                                                                              +-------------+*******                                                                                        .....                                                               ...........                
-                                                                                          ....| human_input |....   ****************                                                                            .                                                                         .                
-                                                                               ...........    +-------------+    .......            ***************                                                             .                                                                         .                
-                                                                      .........                                         .........                  ****************                                             .                                                                         .                
-                                                           ...........                                                           .......                           ***************                              .                                                                         .                
-                                                  .........                                                                             .........                                 ****************              .                                                                         .                
-                                            ......                                                                                               ....                                        .....******+-------------+                                                       +---------------------+      
-                                            .                                                                                                       .                ........................       ....| task_router |                                                       | task_classification |      
-                                            .                                                                                               .........................                    ...........    +-------------+****                                                   +---------------------+      
-                                            .                                                                       ........................        .                         ...........                                  *****                                                 ...            ...        
-                                            .                                              .........................                                .              ...........                                                  *****                                          ..                  ...     
-                                            .                      ........................                                                         .        ......                                                                  ****                                    ..                       ..   
-                                  +-------------------+................                                                                   +-----------------+.........                                                                   *****                  +-------------------+                  ... 
-                                  | router_join_table |.....           ..................................                                 | router_timezone |.........................                                                        *****             | split_query_agent |             .....    
-                                ..+-------------------+***  ..........                                   .................................+-----------------+  *******............... .................                                            ******       +-------------------+        .....         
-                          ......             .            *****       ...........                                           .......        ..................................        ................. .................                                 *****            *            ......              
-                     .....                   .                 *****             ..........                          .......              ..                ..               ........................................   .................                     *****       *       .....                    
-                  ...                         .                     ******                 ......                ....                   ..                    ..                    *******                    ..........................................          ***    *    ...                         
-+-----------------------+                     .                           ***                   +-----------------+           +--------------+           +---------------+                 ****                                       ........   ................+----------------+                        
-| join_table_rag_lookup |                     .                     ******                      | code_generation |           | tz_extractor |******     | tz_rag_lookup |                     *                                   .......                       | llm_first_pass |                        
-+-----------------------+*                   .                 *****                            +-----------------+           +--------------+      *****+---------------+******                *                            ......                              +----------------+                        
-                          ******             .            *****                                           *                                                    ***********      ******           *                    .......                                                                              
-                                *****       .       ******                                                *                                                               *********** ******      *            .......                                                                                     
-                                     ***    .    ***                                                      *                                                                          ****** ***    *       ....                                                                                            
-                                  +------------------+                                              +---------+                                                                    +---------------------------------+                                                                                     
-                                  | join_table_check |                                              | __end__ |                                                                    | existence_and_column_type_check |                                                                                     
-                                  +------------------+                                              +---------+                                                                    +---------------------------------+                                                                                     2025-06-07 18:18:09,471 - backend_main - INFO - Created DataProcessingApp instance for client 127.0.0.1:52290
-2025-06-07 18:18:09,471 - backend_main - INFO - Client connected: 127.0.0.1:52290. Total connections: 1
-2025-06-07 18:18:09,472 - backend_main - ERROR - Error sending message to 127.0.0.1:52290: 
-2025-06-07 18:18:09,472 - backend_main - ERROR - WebSocket error with 127.0.0.1:52290: WebSocket is not connected. Need to call "accept" first.
-2025-06-07 18:18:09,472 - backend_main - INFO - Client disconnected: 127.0.0.1:52290. Remaining connections: 0
+                                                                                                                                           +-----------+                                                                                                                                   
+                                                                                                                                           | __start__ |                                                                                                                                   
+                                                                                                                                           +-----------+                                                                                                                                   
+                                                                                                                                                 *                                                                                                                                         
+                                                                                                                                                 *                                                                                                                                         
+                                                                                                                                                 *                                                                                                                                         
+                                                                                                                                       +------------------+                                                                                                                                
+                                                                                                                                .......| first_run_router |..........                                                                                                                      
+                                                                                                                ................       +------------------+          ....................                                                                                                  
+                                                                                                 ...............                                         ..                              ...................                                                                               
+                                                                                 ................                                                          ...                                              ...................                                                            
+                                                                 ................                                                                             ..                                                               ....................                                        
+                                                         ........                                                                                         +-------------+******                                                                    ..........                              
+                                                         .                                                                                            ....| human_input |..... *************                                                                .                              
+                                                         .                                                                                 ...........    +-------------+     ...........   *************                                                   .                              
+                                                         .                                                                        .........                                              ...........     ************                                       .                              
+                                                         .                                                             ...........                                                                  ..........       *************                          .                              
+                                                         .                                                    .........                                                                                       ...........         *************             .                              
+                                             +---------------------+                                    ......                                                                                                           ......            ....*****+-------------+                        
+                                             | task_classification |                                    .                                                                                                            ......................         | task_router |                        
+                                             +---------------------+                                    .                                                                                      ......................         .                 ....+-------------+                        
+                                                ...            ...                                      .                                                                ......................                               .            .....            *                              
+                                              ..                  ...                                   .                                          ......................                                                     .       .....                 *                              
+                                            ..                       ..                                 .                    ......................                                                                           .    ...                      *                              
+                               +-------------------+                   .....                 +-------------------+...........                                                                                        +-----------------+          ***********                              
+                               | split_query_agent |*******                 ........  .......| router_join_table |.                                                                                        ..........| router_timezone |**********                                         
+                               +-------------------+       ***************.................. +-------------------+ ........                                                           ...................************+-----------------+...  *********                                     
+                                                   .................   *****************    ........           ..          .......                              ....................*********************      ....           .            .....      ***********                          
+                                 ..................          **********                 ***************.....     ...              ........ ....................*********************                      .....               .                 ....             *********                 
+                        .........                  **********                               ..         ********.    ..          ...........********************......                                  ...                    .                     .....                 ***********      
++-----------------------+                     *****                                     ....                  +----------------+***********+-----------------+                             +--------------+           +---------------+                  ...                         ***** 
+| join_table_rag_lookup |                       *                                  .....                      | llm_first_pass |           | code_generation |                             | tz_extractor |***        | tz_rag_lookup |                 ..                     *******     
++-----------------------+*******                 ***                          .....                           +----------------+           +-----------------+                             +--------------+   ******* +---------------+               ..                *******            
+                                ********            *                   ......                                                                       *                                                               ********        ***            ..          ********                   
+                                        ********     ***           .....                                                                             *                                                                       *******    **        ..     *******                           
+                                                ****    *       ...                                                                                  *                                                                              ****  **    ..   ****                                  
+                                                +------------------+                                                                           +---------+                                                                  +---------------------------------+                            
+                                                | join_table_check |                                                                           | __end__ |                                                                  | existence_and_column_type_check |                            
+                                                +------------------+                                                                           +---------+                                                                  +---------------------------------+                            2025-06-07 18:28:52,571 - backend_main - INFO - Created DataProcessingApp instance for client 127.0.0.1:53206
+2025-06-07 18:28:52,571 - backend_main - INFO - Client connected: 127.0.0.1:53206. Total connections: 1
+2025-06-07 18:28:52,572 - backend_main - ERROR - Error sending message to 127.0.0.1:53206: 
+2025-06-07 18:28:52,572 - backend_main - ERROR - WebSocket error with 127.0.0.1:53206: WebSocket is not connected. Need to call "accept" first.
+2025-06-07 18:28:52,572 - backend_main - INFO - Client disconnected: 127.0.0.1:53206. Remaining connections: 0
 
 📄  Mermaid syntax saved ➜ workflow.mmd
 🖼  PNG graph saved   ➜ workflow.png  (102617 bytes)
 
 🔑 API Key Configuration
 ────────────────────────
-Please enter your Deepseek API key: 2025-06-07 18:18:11,262 - DataProcessingApp - INFO - Loading data files from /Users/xingyugong/GenAI_Nasdaq/GenAI_Nasdaq/01_Data
-2025-06-07 18:18:11,262 - DataProcessingApp - INFO - Found data file: /Users/xingyugong/GenAI_Nasdaq/GenAI_Nasdaq/01_Data/EFR.csv
-2025-06-07 18:18:11,262 - DataProcessingApp - INFO - Found data file: /Users/xingyugong/GenAI_Nasdaq/GenAI_Nasdaq/01_Data/EQR.csv
-2025-06-07 18:18:11,263 - DataProcessingApp - INFO - Found data file: /Users/xingyugong/GenAI_Nasdaq/GenAI_Nasdaq/01_Data/SKMS.csv
+Please enter your Deepseek API key: 2025-06-07 18:28:54,223 - DataProcessingApp - INFO - Loading data files from /Users/xingyugong/GenAI_Nasdaq/GenAI_Nasdaq/Data
+2025-06-07 18:28:54,223 - DataProcessingApp - INFO - Found data file: /Users/xingyugong/GenAI_Nasdaq/GenAI_Nasdaq/Data/EFR.csv
+2025-06-07 18:28:54,224 - DataProcessingApp - INFO - Found data file: /Users/xingyugong/GenAI_Nasdaq/GenAI_Nasdaq/Data/EQR.csv
+2025-06-07 18:28:54,224 - DataProcessingApp - INFO - Found data file: /Users/xingyugong/GenAI_Nasdaq/GenAI_Nasdaq/Data/SKMS.csv
 ⚠️  Running in WebSocket mode - using default API keys
 
 🖼  ASCII graph
 
-                                                                                                                                             +-----------+                                                                                                                                                 
-                                                                                                                                             | __start__ |                                                                                                                                                 
-                                                                                                                                             +-----------+                                                                                                                                                 
-                                                                                                                                                    *                                                                                                                                                      
-                                                                                                                                                    *                                                                                                                                                      
-                                                                                                                                                    *                                                                                                                                                      
-                                                                                                                                          +------------------+...........                                                                                                                                  
-                                                                                                                                        ..| first_run_router |......     ....................                                                                                                              
-                                                                                                                                 .......  +------------------+      .........                .....................                                                                                         
-                                                                                                                        .........                                            ...........                          .....................                                                                    
-                                                                                                                 .......                                                                .........                                      .....................                                               
-                                                                                                            .....                                                                                ...........                                                ....................                           
-                                                                                              +-------------+*******                                                                                        .....                                                               ...........                
-                                                                                          ....| human_input |....   ****************                                                                            .                                                                         .                
-                                                                               ...........    +-------------+    .......            ***************                                                             .                                                                         .                
-                                                                      .........                                         .........                  ****************                                             .                                                                         .                
-                                                           ...........                                                           .......                           ***************                              .                                                                         .                
-                                                  .........                                                                             .........                                 ****************              .                                                                         .                
-                                            ......                                                                                               ....                                        .....******+-------------+                                                       +---------------------+      
-                                            .                                                                                                       .                ........................       ....| task_router |                                                       | task_classification |      
-                                            .                                                                                               .........................                    ...........    +-------------+****                                                   +---------------------+      
-                                            .                                                                       ........................        .                         ...........                                  *****                                                 ...            ...        
-                                            .                                              .........................                                .              ...........                                                  *****                                          ..                  ...     
-                                            .                      ........................                                                         .        ......                                                                  ****                                    ..                       ..   
-                                  +-------------------+................                                                                   +-----------------+.........                                                                   *****                  +-------------------+                  ... 
-                                  | router_join_table |.....           ..................................                                 | router_timezone |.........................                                                        *****             | split_query_agent |             .....    
-                                ..+-------------------+...  ..........                                   .................................+-----------------+  *******............... .................                                            ******       +-------------------+        .....         
-                          ......             *            .....       ...........                                           .......        ..................................        ................. .................                                 *****            *            ......              
-                     .....                   *                 .....             ..........                          .......              ..                ..               ........................................   .................                     *****       *       .....                    
-                  ...                         *                     ......                 ......                ....                   ..                    ..                    *******                    ..........................................          ***    *    ...                         
-+-----------------------+                     *                           ...                   +-----------------+           +--------------+           +---------------+                 ****                                       ........   ................+----------------+                        
-| join_table_rag_lookup |                     *                     ......                      | code_generation |           | tz_extractor |******     | tz_rag_lookup |                     *                                   .......                       | llm_first_pass |                        
-+-----------------------+*                   *                 .....                            +-----------------+           +--------------+      *****+---------------+******                *                            ......                              +----------------+                        
-                          ******             *            .....                                           *                                                    ***********      ******           *                    .......                                                                              
-                                *****       *       ......                                                *                                                               *********** ******      *            .......                                                                                     
-                                     ***    *    ...                                                      *                                                                          ****** ***    *       ....                                                                                            
-                                  +------------------+                                              +---------+                                                                    +---------------------------------+                                                                                     
-                                  | join_table_check |                                              | __end__ |                                                                    | existence_and_column_type_check |                                                                                     
-                                  +------------------+                                              +---------+                                                                    +---------------------------------+                                                                                     2025-06-07 18:18:11,676 - backend_main - INFO - Created DataProcessingApp instance for client 127.0.0.1:52292
-2025-06-07 18:18:11,677 - backend_main - INFO - Client connected: 127.0.0.1:52292. Total connections: 1
-2025-06-07 18:18:17,338 - DataProcessingApp - INFO - Loading data files from /Users/xingyugong/GenAI_Nasdaq/GenAI_Nasdaq/01_Data
-2025-06-07 18:18:17,338 - DataProcessingApp - INFO - Found data file: /Users/xingyugong/GenAI_Nasdaq/GenAI_Nasdaq/01_Data/EFR.csv
-2025-06-07 18:18:17,339 - DataProcessingApp - INFO - Found data file: /Users/xingyugong/GenAI_Nasdaq/GenAI_Nasdaq/01_Data/EQR.csv
-2025-06-07 18:18:17,339 - DataProcessingApp - INFO - Found data file: /Users/xingyugong/GenAI_Nasdaq/GenAI_Nasdaq/01_Data/SKMS.csv
+                                                                                                                                          +-----------+                                                                                                                                   
+                                                                                                                                          | __start__ |                                                                                                                                   
+                                                                                                                                          +-----------+                                                                                                                                   
+                                                                                                                                                *                                                                                                                                         
+                                                                                                                                                *                                                                                                                                         
+                                                                                                                                                *                                                                                                                                         
+                                                                                                                                      +------------------+                                                                                                                                
+                                                                                                                                ......| first_run_router |...........                                                                                                                     
+                                                                                                                  ..............      +------------------+           ......................                                                                                               
+                                                                                                    ..............                                     ...                                 ......................                                                                         
+                                                                                      ..............                                                      ..                                                     .....................                                                    
+                                                                        ..............                                                                      ..                                                                        ......................                              
+                                                                 .......                                                                                +-------------+*******                                                                              ...........                   
+                                                                 .                                                                                  ....| human_input |...... ***************                                                                         .                   
+                                                                 .                                                                          ........    +-------------+      .............   ***************                                                          .                   
+                                                                 .                                                                  ........                                              ..............    **************                                            .                   
+                                                                 .                                                          ........                                                                    .............     ***************                             .                   
+                                                                 .                                                  ........                                                                                         .............       ***************              .                   
+                                                     +---------------------+                                   .....                                                                                                              .......           ...........+-------------+            
+                                                     | task_classification |                                   .                                                                                                              ......................           | task_router |            
+                                                     +---------------------+                                   .                                                                                       .......................          .                 .....+-------------+            
+                                                        ...            ...                                     .                                                                 ......................                                 .            .....            *                   
+                                                      ..                  ...                                  .                                          .......................                                                       .       .....                  *                  
+                                                    ..                       ..                                .                    ......................                                                                              .    ...                       *                  
+                                       +-------------------+                   .......                +-----------------+...........                                                                                          +-------------------+           **********                  
+                                       | split_query_agent |********                  ................| router_timezone |.....                                                                                       .........| router_join_table |..*********                            
+                                       +-------------------+        ******************................+-----------------+...  .........                                                            .....................******+-------------------+  .......                              
+                                                            .....................   ..******************  .........         ....       ...........                              ....................********************       ...              ***         .........                     
+                                          ........................          ........               ***  ******************....  .....             .........   .................. *******************                         ..                    ***               .......              
+                         .................  ........                ........                    ***                       *********  ...            ..........******************* ......                                   ..                         ***                   .........     
++--------------+.........  +---------------+                   .....                       *****                                  +----------------+**********  +-----------------+                         +-----------------------+                    **                          .... 
+| tz_extractor |***        | tz_rag_lookup |                 ..                     *******                                       | llm_first_pass |            | code_generation |                         | join_table_rag_lookup |                     *                      .....    
++--------------+   ******* +---------------+               ..                *******                                              +----------------+            +-----------------+                         +-----------------------+*                   *                  .....         
+                          ********         **            ..          ********                                                                                            *                                                            ******             *            ......              
+                                  *******    ***       ..     *******                                                                                                    *                                                                  *****       *        .....                    
+                                         ****   **   ..   ****                                                                                                           *                                                                       ***    *     ...                         
+                                  +---------------------------------+                                                                                               +---------+                                                               +------------------+                        
+                                  | existence_and_column_type_check |                                                                                               | __end__ |                                                               | join_table_check |                        
+                                  +---------------------------------+                                                                                               +---------+                                                               +------------------+                        2025-06-07 18:28:54,540 - backend_main - INFO - Created DataProcessingApp instance for client 127.0.0.1:53211
+2025-06-07 18:28:54,540 - backend_main - INFO - Client connected: 127.0.0.1:53211. Total connections: 1
+2025-06-07 18:29:03,392 - DataProcessingApp - INFO - Loading data files from /Users/xingyugong/GenAI_Nasdaq/GenAI_Nasdaq/Data
+2025-06-07 18:29:03,393 - DataProcessingApp - INFO - Found data file: /Users/xingyugong/GenAI_Nasdaq/GenAI_Nasdaq/Data/EFR.csv
+2025-06-07 18:29:03,393 - DataProcessingApp - INFO - Found data file: /Users/xingyugong/GenAI_Nasdaq/GenAI_Nasdaq/Data/EQR.csv
+2025-06-07 18:29:03,393 - DataProcessingApp - INFO - Found data file: /Users/xingyugong/GenAI_Nasdaq/GenAI_Nasdaq/Data/SKMS.csv
 
 📄  Mermaid syntax saved ➜ workflow.mmd
 🖼  PNG graph saved   ➜ workflow.png  (102617 bytes)
@@ -162,17 +162,17 @@ Please enter your Deepseek API key: 2025-06-07 18:18:11,262 - DataProcessingApp 
                                      ***    .    ***                                                                                                  *                                                                              ****  **    ..   ****                                 
                                   +------------------+                                                                                          +---------+                                                                  +---------------------------------+                           
                                   | join_table_check |                                                                                          | __end__ |                                                                  | existence_and_column_type_check |                           
-                                  +------------------+                                                                                          +---------+                                                                  +---------------------------------+                           2025-06-07 18:18:17,646 - backend_main - INFO - API keys set for client 127.0.0.1:52292
-2025-06-07 18:18:22,268 - backend_main - INFO - Starting query processing for 127.0.0.1:52292: Please join EFR and EQR based on ticker
-2025-06-07 18:18:22,270 - DataProcessingApp - INFO - 
+                                  +------------------+                                                                                          +---------+                                                                  +---------------------------------+                           2025-06-07 18:29:03,814 - backend_main - INFO - API keys set for client 127.0.0.1:53211
+2025-06-07 18:29:08,396 - backend_main - INFO - Starting query processing for 127.0.0.1:53211: Please join EFR and EQR based on ticker
+2025-06-07 18:29:08,398 - DataProcessingApp - INFO - 
 ────────────────────────────────────────────────────
 User query → Please join EFR and EQR based on ticker
 ────────────────────────────────────────────────────
-2025-06-07 18:18:22,282 - DataProcessingApp - INFO - ▶️ first_run_router START
-2025-06-07 18:18:22,283 - DataProcessingApp - INFO - ✓ first_run_router END — delta:
-2025-06-07 18:18:22,284 - DataProcessingApp - INFO - {'routing_decision': 'first_run'}
-2025-06-07 18:18:22,284 - DataProcessingApp - INFO - current state:
-2025-06-07 18:18:22,286 - DataProcessingApp - INFO - {   'completeness_check_result': False,
+2025-06-07 18:29:08,407 - DataProcessingApp - INFO - ▶️ first_run_router START
+2025-06-07 18:29:08,409 - DataProcessingApp - INFO - ✓ first_run_router END — delta:
+2025-06-07 18:29:08,409 - DataProcessingApp - INFO - {'routing_decision': 'first_run'}
+2025-06-07 18:29:08,410 - DataProcessingApp - INFO - current state:
+2025-06-07 18:29:08,412 - DataProcessingApp - INFO - {   'completeness_check_result': False,
     'datetime_columns': None,
     'error': None,
     'execution_summary': None,
@@ -197,17 +197,17 @@ User query → Please join EFR and EQR based on ticker
     'task_query': [],
     'task_step': None,
     'user_query': 'Please join EFR and EQR based on ticker'}
-2025-06-07 18:18:22,286 - DataProcessingApp - INFO - ▶️ task_classification START
-2025-06-07 18:18:23,382 - httpx - INFO - HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
-2025-06-07 18:18:30,407 - backend_main - INFO - Received human input from 127.0.0.1:52292: yes
-2025-06-07 18:18:30,410 - DataProcessingApp - INFO - ✓ task_classification END — delta:
-2025-06-07 18:18:30,411 - DataProcessingApp - INFO - {   'task_length': 1,
+2025-06-07 18:29:08,412 - DataProcessingApp - INFO - ▶️ task_classification START
+2025-06-07 18:29:08,935 - httpx - INFO - HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+2025-06-07 18:29:14,675 - backend_main - INFO - Received human input from 127.0.0.1:53211: yes
+2025-06-07 18:29:14,682 - DataProcessingApp - INFO - ✓ task_classification END — delta:
+2025-06-07 18:29:14,683 - DataProcessingApp - INFO - {   'task_length': 1,
     'task_list': ['join_tables'],
     'task_query': ['Please join EFR and EQR based on ticker'],
     'task_step': 1,
     'user_query': 'Please join EFR and EQR based on ticker'}
-2025-06-07 18:18:30,411 - DataProcessingApp - INFO - current state:
-2025-06-07 18:18:30,412 - DataProcessingApp - INFO - {   'completeness_check_result': False,
+2025-06-07 18:29:14,684 - DataProcessingApp - INFO - current state:
+2025-06-07 18:29:14,685 - DataProcessingApp - INFO - {   'completeness_check_result': False,
     'datetime_columns': None,
     'error': None,
     'execution_summary': None,
@@ -232,12 +232,12 @@ User query → Please join EFR and EQR based on ticker
     'task_query': ['Please join EFR and EQR based on ticker'],
     'task_step': 1,
     'user_query': 'Please join EFR and EQR based on ticker'}
-2025-06-07 18:18:30,413 - DataProcessingApp - INFO - ▶️ llm_first_pass START
-2025-06-07 18:18:31,256 - httpx - INFO - HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
-2025-06-07 18:18:35,518 - DataProcessingApp - INFO - ✓ llm_first_pass END — delta:
-2025-06-07 18:18:35,518 - DataProcessingApp - INFO - {'join_column1': 'ticker', 'join_column2': 'ticker', 'table_name1': 'EFR', 'table_name2': 'EQR'}
-2025-06-07 18:18:35,518 - DataProcessingApp - INFO - current state:
-2025-06-07 18:18:35,519 - DataProcessingApp - INFO - {   'completeness_check_result': False,
+2025-06-07 18:29:14,685 - DataProcessingApp - INFO - ▶️ llm_first_pass START
+2025-06-07 18:29:15,179 - httpx - INFO - HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+2025-06-07 18:29:22,901 - DataProcessingApp - INFO - ✓ llm_first_pass END — delta:
+2025-06-07 18:29:22,901 - DataProcessingApp - INFO - {'join_column1': 'ticker', 'join_column2': 'ticker', 'table_name1': 'EFR', 'table_name2': 'EQR'}
+2025-06-07 18:29:22,902 - DataProcessingApp - INFO - current state:
+2025-06-07 18:29:22,903 - DataProcessingApp - INFO - {   'completeness_check_result': False,
     'datetime_columns': None,
     'error': None,
     'execution_summary': None,
@@ -262,11 +262,11 @@ User query → Please join EFR and EQR based on ticker
     'task_query': ['Please join EFR and EQR based on ticker'],
     'task_step': 1,
     'user_query': 'Please join EFR and EQR based on ticker'}
-2025-06-07 18:18:35,519 - DataProcessingApp - INFO - ▶️ task_router START
-2025-06-07 18:18:35,521 - DataProcessingApp - INFO - ✓ task_router END — delta:
-2025-06-07 18:18:35,522 - DataProcessingApp - INFO - {'routing_decision': 'execute_join_table_subagent'}
-2025-06-07 18:18:35,522 - DataProcessingApp - INFO - current state:
-2025-06-07 18:18:35,522 - DataProcessingApp - INFO - {   'completeness_check_result': False,
+2025-06-07 18:29:22,903 - DataProcessingApp - INFO - ▶️ task_router START
+2025-06-07 18:29:22,904 - DataProcessingApp - INFO - ✓ task_router END — delta:
+2025-06-07 18:29:22,904 - DataProcessingApp - INFO - {'routing_decision': 'execute_join_table_subagent'}
+2025-06-07 18:29:22,904 - DataProcessingApp - INFO - current state:
+2025-06-07 18:29:22,905 - DataProcessingApp - INFO - {   'completeness_check_result': False,
     'datetime_columns': None,
     'error': None,
     'execution_summary': None,
@@ -291,11 +291,11 @@ User query → Please join EFR and EQR based on ticker
     'task_query': ['Please join EFR and EQR based on ticker'],
     'task_step': 1,
     'user_query': 'Please join EFR and EQR based on ticker'}
-2025-06-07 18:18:35,523 - DataProcessingApp - INFO - ▶️ router_join_table START
-2025-06-07 18:18:35,524 - DataProcessingApp - INFO - ✓ router_join_table END — delta:
-2025-06-07 18:18:35,524 - DataProcessingApp - INFO - {'completeness_check_result': False, 'first_run': True, 'routing_decision': 'join_table_check', 'task_step': 1}
-2025-06-07 18:18:35,524 - DataProcessingApp - INFO - current state:
-2025-06-07 18:18:35,525 - DataProcessingApp - INFO - {   'completeness_check_result': False,
+2025-06-07 18:29:22,906 - DataProcessingApp - INFO - ▶️ router_join_table START
+2025-06-07 18:29:22,907 - DataProcessingApp - INFO - ✓ router_join_table END — delta:
+2025-06-07 18:29:22,908 - DataProcessingApp - INFO - {'completeness_check_result': False, 'first_run': True, 'routing_decision': 'join_table_check', 'task_step': 1}
+2025-06-07 18:29:22,908 - DataProcessingApp - INFO - current state:
+2025-06-07 18:29:22,909 - DataProcessingApp - INFO - {   'completeness_check_result': False,
     'datetime_columns': None,
     'error': None,
     'execution_summary': None,
@@ -320,15 +320,15 @@ User query → Please join EFR and EQR based on ticker
     'task_query': ['Please join EFR and EQR based on ticker'],
     'task_step': 1,
     'user_query': 'Please join EFR and EQR based on ticker'}
-2025-06-07 18:18:35,525 - DataProcessingApp - INFO - ▶️ join_table_check START
-2025-06-07 18:18:35,536 - DataProcessingApp - INFO - ✓ join_table_check END — delta:
-2025-06-07 18:18:35,536 - DataProcessingApp - INFO - {   'completeness_check_result': True,
+2025-06-07 18:29:22,909 - DataProcessingApp - INFO - ▶️ join_table_check START
+2025-06-07 18:29:22,919 - DataProcessingApp - INFO - ✓ join_table_check END — delta:
+2025-06-07 18:29:22,919 - DataProcessingApp - INFO - {   'completeness_check_result': True,
     'human_message': 'Join check passed. You may proceed with merging.\n'
                      'Warnings:\n'
                      'This may be a many-to-many join. Expect large row growth.',
     'needs_human_input': False}
-2025-06-07 18:18:35,537 - DataProcessingApp - INFO - current state:
-2025-06-07 18:18:35,537 - DataProcessingApp - INFO - {   'completeness_check_result': True,
+2025-06-07 18:29:22,919 - DataProcessingApp - INFO - current state:
+2025-06-07 18:29:22,920 - DataProcessingApp - INFO - {   'completeness_check_result': True,
     'datetime_columns': None,
     'error': None,
     'execution_summary': None,
@@ -355,11 +355,11 @@ User query → Please join EFR and EQR based on ticker
     'task_query': ['Please join EFR and EQR based on ticker'],
     'task_step': 1,
     'user_query': 'Please join EFR and EQR based on ticker'}
-2025-06-07 18:18:35,537 - DataProcessingApp - INFO - ▶️ router_join_table START
-2025-06-07 18:18:35,538 - DataProcessingApp - INFO - ✓ router_join_table END — delta:
-2025-06-07 18:18:35,538 - DataProcessingApp - INFO - {'completeness_check_result': True, 'first_run': True, 'routing_decision': 'done', 'task_step': 1}
-2025-06-07 18:18:35,538 - DataProcessingApp - INFO - current state:
-2025-06-07 18:18:35,539 - DataProcessingApp - INFO - {   'completeness_check_result': True,
+2025-06-07 18:29:22,920 - DataProcessingApp - INFO - ▶️ router_join_table START
+2025-06-07 18:29:22,921 - DataProcessingApp - INFO - ✓ router_join_table END — delta:
+2025-06-07 18:29:22,921 - DataProcessingApp - INFO - {'completeness_check_result': True, 'first_run': True, 'routing_decision': 'done', 'task_step': 1}
+2025-06-07 18:29:22,921 - DataProcessingApp - INFO - current state:
+2025-06-07 18:29:22,922 - DataProcessingApp - INFO - {   'completeness_check_result': True,
     'datetime_columns': None,
     'error': None,
     'execution_summary': None,
@@ -386,16 +386,16 @@ User query → Please join EFR and EQR based on ticker
     'task_query': ['Please join EFR and EQR based on ticker'],
     'task_step': 1,
     'user_query': 'Please join EFR and EQR based on ticker'}
-2025-06-07 18:18:35,539 - DataProcessingApp - INFO - ▶️ code_generation START
-2025-06-07 18:18:35,910 - httpx - INFO - HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
-2025-06-07 18:18:46,139 - DataProcessingApp - INFO - ✓ code_generation END — delta:
-2025-06-07 18:18:46,139 - DataProcessingApp - INFO - {   'generated_code': 'import pandas as pd\n'
+2025-06-07 18:29:22,922 - DataProcessingApp - INFO - ▶️ code_generation START
+2025-06-07 18:29:23,294 - httpx - INFO - HTTP Request: POST https://api.deepseek.com/chat/completions "HTTP/1.1 200 OK"
+2025-06-07 18:29:32,384 - DataProcessingApp - INFO - ✓ code_generation END — delta:
+2025-06-07 18:29:32,385 - DataProcessingApp - INFO - {   'generated_code': 'import pandas as pd\n'
                       'import sys\n'
                       '\n'
                       'try:\n'
                       '    # Load datasets\n'
-                      "    efr = pd.read_csv('01_Data/EFR.csv')\n"
-                      "    eqr = pd.read_csv('01_Data/EQR.csv')\n"
+                      "    efr = pd.read_csv('Data/EFR.csv')\n"
+                      "    eqr = pd.read_csv('Data/EQR.csv')\n"
                       '    \n'
                       "    # Perform inner join on 'ticker'\n"
                       "    joined_df = pd.merge(efr, eqr, on='ticker', how='inner')\n"
@@ -409,8 +409,8 @@ User query → Please join EFR and EQR based on ticker
                       'except Exception as e:\n'
                       '    print(f"Error: {e}")\n'
                       '    sys.exit(1)'}
-2025-06-07 18:18:46,140 - DataProcessingApp - INFO - current state:
-2025-06-07 18:18:46,140 - DataProcessingApp - INFO - {   'completeness_check_result': True,
+2025-06-07 18:29:32,385 - DataProcessingApp - INFO - current state:
+2025-06-07 18:29:32,386 - DataProcessingApp - INFO - {   'completeness_check_result': True,
     'datetime_columns': None,
     'error': None,
     'execution_summary': None,
@@ -420,8 +420,8 @@ User query → Please join EFR and EQR based on ticker
                       '\n'
                       'try:\n'
                       '    # Load datasets\n'
-                      "    efr = pd.read_csv('01_Data/EFR.csv')\n"
-                      "    eqr = pd.read_csv('01_Data/EQR.csv')\n"
+                      "    efr = pd.read_csv('Data/EFR.csv')\n"
+                      "    eqr = pd.read_csv('Data/EQR.csv')\n"
                       '    \n'
                       "    # Perform inner join on 'ticker'\n"
                       "    joined_df = pd.merge(efr, eqr, on='ticker', how='inner')\n"
@@ -456,4 +456,4 @@ User query → Please join EFR and EQR based on ticker
     'task_query': ['Please join EFR and EQR based on ticker'],
     'task_step': 1,
     'user_query': 'Please join EFR and EQR based on ticker'}
-2025-06-07 18:18:59,512 - backend_main - INFO - Client disconnected: 127.0.0.1:52292. Remaining connections: 0
+2025-06-07 18:29:43,262 - backend_main - INFO - Client disconnected: 127.0.0.1:53211. Remaining connections: 0

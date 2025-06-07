@@ -85,7 +85,7 @@ class MasterAgent:
                 tables = [tables_str]  # Keep as single-item list
             
             # Convert to file paths
-            file_paths = [f"01_Data/{table}.csv" for table in tables]
+            file_paths = [f"Data/{table}.csv" for table in tables]
 
             return file_paths
 

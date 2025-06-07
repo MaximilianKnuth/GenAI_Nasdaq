@@ -28,6 +28,7 @@ cleanup() {
   rm -f logs/*.tmp.log
   rm -f debug_backend.log
   rm -f workflow.mmd
+  rm -f backend.log
   
   echo "Cleanup complete"
   exit 0

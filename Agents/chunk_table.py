@@ -87,7 +87,7 @@ def get_table_data_by_datatype(doc, table_index):
     
     return datatype_dict
 
-def trunk_table_execute(table_name, doc_path="01_Data/Data Product Samples.docx"):
+def trunk_table_execute(table_name, doc_path="Data/Data Product Samples.docx"):
     """
     Open the DOCX file at the provided path, search for the paragraph containing the table name,
     and then use that paragraph's position (assumed to match the table index) to extract the table data.

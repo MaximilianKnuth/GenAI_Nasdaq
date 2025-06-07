@@ -102,7 +102,7 @@ class DataTransformationAgent:
     def extract_table_and_columns_via_rag(self, user_query, df_dict, api_key):
 
         # Update these paths/keys as needed
-        pdf_folder = "01_Data/text_data"
+        pdf_folder = "Data/text_data"
         openai_api_key = "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"
         deepseek_api_key = "sk-74c415edef3f4a16b1ef8deb3839cf2a"
         
