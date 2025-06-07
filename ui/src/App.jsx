@@ -10,6 +10,11 @@ function App() {
   const [waitingForHumanInput, setWaitingForHumanInput] = useState(false);
   const [humanInputPrompt, setHumanInputPrompt] = useState('');
   const [connectionStatus, setConnectionStatus] = useState('disconnected'); // 'disconnected', 'connecting', 'connected'
+  const [apiKeys, setApiKeys] = useState({
+    openai: '',
+    deepseek: ''
+  });
+  const [apiKeysSubmitted, setApiKeysSubmitted] = useState(false);
   
   const ws = useRef(null);
   const reconnectingRef = useRef(false);
@@ -251,6 +256,28 @@ function App() {
     }
   };
 
+  const handleApiKeySubmit = (e) => {
+    e.preventDefault();
+    if (apiKeys.openai.trim() && apiKeys.deepseek.trim()) {
+      setApiKeysSubmitted(true);
+      // Send API keys to server
+      if (ws.current && ws.current.readyState === WebSocket.OPEN) {
+        ws.current.send(JSON.stringify({
+          type: 'set_api_keys',
+          content: apiKeys
+        }));
+      }
+    }
+  };
+
+  const handleApiKeyChange = (e) => {
+    const { name, value } = e.target;
+    setApiKeys(prev => ({
+      ...prev,
+      [name]: value
+    }));
+  };
+
   return (
     <div className="App">
       <header className="App-header">
@@ -261,16 +288,51 @@ function App() {
         </div>
       </header>
       <main>
-        <Terminal 
-          messages={messages} 
-          inputValue={inputValue} 
-          setInputValue={setInputValue}
-          handleSubmit={handleSubmit}
-          isProcessing={isProcessing}
-          connected={connected}
-          waitingForHumanInput={waitingForHumanInput}
-          humanInputPrompt={humanInputPrompt}
-        />
+        {!apiKeysSubmitted ? (
+          <div className="api-key-form">
+            <h2>Enter API Keys</h2>
+            <form onSubmit={handleApiKeySubmit}>
+              <div className="form-group">
+                <label htmlFor="openai">OpenAI API Key:</label>
+                <input
+                  type="password"
+                  id="openai"
+                  name="openai"
+                  value={apiKeys.openai}
+                  onChange={handleApiKeyChange}
+                  required
+                  placeholder="Enter OpenAI API Key"
+                />
+              </div>
+              <div className="form-group">
+                <label htmlFor="deepseek">DeepSeek API Key:</label>
+                <input
+                  type="password"
+                  id="deepseek"
+                  name="deepseek"
+                  value={apiKeys.deepseek}
+                  onChange={handleApiKeyChange}
+                  required
+                  placeholder="Enter DeepSeek API Key"
+                />
+              </div>
+              <button type="submit" disabled={!apiKeys.openai.trim() || !apiKeys.deepseek.trim()}>
+                Submit API Keys
+              </button>
+            </form>
+          </div>
+        ) : (
+          <Terminal 
+            messages={messages} 
+            inputValue={inputValue} 
+            setInputValue={setInputValue}
+            handleSubmit={handleSubmit}
+            isProcessing={isProcessing}
+            connected={connected}
+            waitingForHumanInput={waitingForHumanInput}
+            humanInputPrompt={humanInputPrompt}
+          />
+        )}
       </main>
       <footer>
         {waitingForHumanInput ? (

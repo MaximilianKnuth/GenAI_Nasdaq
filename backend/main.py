@@ -72,6 +72,7 @@ class ConnectionManager:
         self.app_instances: Dict[str, DataProcessingApp] = {}
         self.human_input_queues: Dict[str, queue.Queue] = {}
         self.processing_threads: Dict[str, threading.Thread] = {}
+        self.api_keys: Dict[str, Dict[str, str]] = {}  # Store API keys for each client
     
     async def connect(self, websocket: WebSocket):
         try:
@@ -80,10 +81,11 @@ class ConnectionManager:
             self.active_connections[client_id] = websocket
             self.processing[client_id] = False
             self.human_input_queues[client_id] = queue.Queue()
+            self.api_keys[client_id] = {"openai": "", "deepseek": ""}  # Initialize empty API keys
             
             # Create a new DataProcessingApp instance for this client
             try:
-                self.app_instances[client_id] = DataProcessingApp()
+                self.app_instances[client_id] = DataProcessingApp()  # Will use default keys until set
                 logger.info(f"Created DataProcessingApp instance for client {client_id}")
             except Exception as e:
                 logger.error(f"Error creating DataProcessingApp for client {client_id}: {str(e)}")
@@ -99,7 +101,7 @@ class ConnectionManager:
             
             logger.info(f"Client connected: {client_id}. Total connections: {len(self.active_connections)}")
             # Send welcome message
-            await self.send_message(client_id, {"type": "system", "content": "Connected to NASDAQ GenAI Terminal. Type a query to begin."})
+            await self.send_message(client_id, {"type": "system", "content": "Connected to NASDAQ GenAI Terminal. Please enter your API keys to begin."})
         except Exception as e:
             logger.error(f"Error during WebSocket connection: {str(e)}")
             logger.error(traceback.format_exc())
@@ -111,6 +113,7 @@ class ConnectionManager:
             if client_id in self.active_connections:
                 del self.active_connections[client_id]
                 self.processing.pop(client_id, None)
+                self.api_keys.pop(client_id, None)  # Remove API keys on disconnect
                 
                 # Clean up any running threads
                 if client_id in self.processing_threads and self.processing_threads[client_id].is_alive():
@@ -145,6 +148,27 @@ class ConnectionManager:
         except Exception as e:
             logger.error(f"Error handling ping from {client_id}: {str(e)}")
     
+    async def handle_api_keys(self, client_id: str, api_keys: Dict[str, str]):
+        """Handle setting API keys for a client"""
+        try:
+            if client_id in self.active_connections:
+                self.api_keys[client_id] = api_keys
+                # Create a new DataProcessingApp instance with the provided API keys
+                self.app_instances[client_id] = DataProcessingApp(api_keys=api_keys)
+                logger.info(f"API keys set for client {client_id}")
+                await self.send_message(client_id, {
+                    "type": "system",
+                    "content": "API keys set successfully. You can now start using the terminal."
+                })
+            else:
+                logger.warning(f"Attempted to set API keys for non-existent client: {client_id}")
+        except Exception as e:
+            logger.error(f"Error setting API keys for {client_id}: {str(e)}")
+            await self.send_message(client_id, {
+                "type": "error",
+                "content": f"Error setting API keys: {str(e)}"
+            })
+    
     def process_query_thread(self, client_id: str, query: str):
         """Thread function to process a query using DataProcessingApp"""
         try:
@@ -156,6 +180,14 @@ class ConnectionManager:
                 asyncio.run(self.send_message(client_id, {
                     "type": "error", 
                     "content": "Session error: Application instance not found. Please refresh the page and try again."
+                }))
+                return
+            
+            # Check if API keys are set
+            if not self.api_keys.get(client_id, {}).get("openai") or not self.api_keys.get(client_id, {}).get("deepseek"):
+                asyncio.run(self.send_message(client_id, {
+                    "type": "error",
+                    "content": "API keys not set. Please set your API keys before submitting queries."
                 }))
                 return
             
@@ -365,6 +397,8 @@ async def websocket_endpoint(websocket: WebSocket):
                 
                 if message_type == "ping":
                     await manager.handle_ping(client_id)
+                elif message_type == "set_api_keys":
+                    await manager.handle_api_keys(client_id, content)
                 elif message_type == "process_query":
                     await manager.process_query(client_id, content)
                 elif message_type == "human_input":
