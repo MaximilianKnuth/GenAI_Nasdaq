@@ -1,6 +1,6 @@
 # GenAI Nasdaq Project
 
-A powerful data processing and transformation system that leverages AI agents to handle complex data operations.
+A powerful data processing and transformation system that leverages AI agents to handle complex data operations using LangGraph and Rag architecture.
 
 ## Project Structure
 
@@ -88,3 +88,11 @@ The system supports various data operations:
 - The system automatically cleans up temporary files and logs on exit
 - All data operations are logged for debugging and auditing
 - The system uses both OpenAI and DeepSeek models for different operations
+
+## System Screenshots
+
+### Initial Interface
+![System Screenshot 1](screenshot/system_screenshot_1.png)
+
+### Main Conversation Terminal
+![System Screenshot 2](screenshot/system_screenshot_2.png)
